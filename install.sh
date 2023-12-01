@@ -102,7 +102,6 @@ clone_build() {
 # Only for Arch Linux operating system
 arch_linux() {
     # Upgrade all installed packages
-    echo "Upgrading installed packages..."
     sudo pacman -Syu --noconfirm
 
     # Install required packages
