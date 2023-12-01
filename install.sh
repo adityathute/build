@@ -95,7 +95,7 @@ clone_build() {
 
     # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
     if [ -f "core.py" ]; then
-        python core.py "$OS" "$DISTRO" "$PKGMANAGER"
+        python core.py "$OS" "$DISTRO"
     fi
 }
 
