@@ -1,0 +1,46 @@
+
+function ade() {
+    cd ..
+    source env/bin/activate
+    cd myProject
+}
+function adce() {
+    cd ..
+    python -m venv env
+}
+function aded() {
+    deactivate
+}
+function adir() {
+    pip install -r build/requirements.txt
+}
+function adfr() {
+    pip freeze > build/requirements.txt
+}
+function adr() {
+    python manage.py runserver
+}
+function adw {
+    npx webpack --config static/webpack/webpack.config.js
+}
+function adew {
+    ade
+    adw
+}
+function ader {
+    ade
+    adr
+}
+function adm {
+    python manage.py makemigrations account
+    python manage.py migrate account
+    python manage.py makemigrations
+    python manage.py migrate
+}
+function adms {
+    python manage.py makemigrations account
+    python manage.py migrate account
+    python manage.py makemigrations
+    python manage.py migrate
+    python manage.py createsuperuser
+}
