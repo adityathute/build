@@ -23,7 +23,7 @@ def detect_distribution():
     distribution_arg = sys.argv[2] if len(sys.argv) > 2 else "unknown"
     pkgmanager_arg = sys.argv[3] if len(sys.argv) > 2 else "unknown"
 
-    if distribution_arg == "arch":
+    if distribution_arg == "arch linux":
         print(f"Detected Arch Linux....{pkgmanager_arg}")
     elif distribution_arg in ["debian", "ubuntu", "linuxmint"]:
         print(f"This script supports Arch Linux only. Detected {distribution_arg} distribution.")

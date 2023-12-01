@@ -1,5 +1,5 @@
  
-chmod +x install_build.sh
+chmod +x install.sh
 
-./install_build.sh
+./install.sh
 
