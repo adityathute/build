@@ -1,14 +1,7 @@
 #!/bin/bash
 
 # Function to check the operating system
-check_os() {
-    case "$OSTYPE" in
-        linux*)   OS="linux";;
-        darwin*)  OS="macos";;
-        msys*)    OS="windows";;
-        *)        OS="unknown";;
-    esac
-}
+check_os() { case "$OSTYPE" in linux*) OS="linux";; darwin*) OS="macos";; msys*) OS="windows";; *) OS="unknown";; esac }
 
 # Function to detect Linux distribution
 detect_distribution() {
@@ -26,42 +19,31 @@ detect_distribution() {
     fi
 }
 
+# Function to set up Git configuration
 git_config() {
-    # Check if user.name is already configured
-    if [ -z "$(git config --global --get user.name)" ]; then
-        read -p "Enter your full name: " USER_NAME
+    set_config() {
+        local config_key=$1
+        local prompt_message=$2
+        local empty_message=$3
 
-        # Check if USER_NAME is not blank
-        while [ -z "$USER_NAME" ]; do
-            echo "Name cannot be blank. Please enter your full name: "
-            read -p "Enter your full name: " USER_NAME
-        done
+        if [ -z "$(git config --global --get "$config_key")" ]; then
+            read -p "$prompt_message" input_value
 
-        git config --global user.name "$USER_NAME"
-    fi
+            while [ -z "$input_value" ]; do
+                echo "$empty_message"
+                read -p "$prompt_message" input_value
+            done
 
-    # Check if user.email is already configured
-    if [ -z "$(git config --global --get user.email)" ]; then
-        read -p "Enter your GitHub email: " USER_EMAIL
+            git config --global "$config_key" "$input_value"
+        fi
+    }
 
-        # Check if USER_EMAIL is not blank
-        while [ -z "$USER_EMAIL" ]; do
-            echo "Email cannot be blank. Please enter your GitHub email: "
-            read -p "Enter your GitHub email: " USER_EMAIL
-        done
-
-        git config --global user.email "$USER_EMAIL"
-    fi
+    set_config "user.name" "Enter your full name: " "Name cannot be blank. Please enter your full name: "
+    set_config "user.email" "Enter your GitHub email: " "Email cannot be blank. Please enter your GitHub email: "
 }
 
-core() {
-    if [ -f "core.py" ]; then
-        echo "Executing core.py..."
-        python core.py
-    else
-        echo "core.py not found. Please check your project structure."
-    fi
-}
+# Function to run core.py if it exists
+core() { [ -f "core.py" ] && python core.py; }
 
 # Function to set up the build project
 build_setup() {
@@ -69,12 +51,10 @@ build_setup() {
     DESTINATION_DIR="build"  # Specify the destination directory
 
     if [ -d "$DESTINATION_DIR" ]; then
-        echo "Project already exists. Updating..."
         cd "$DESTINATION_DIR" || exit 1
         git pull
         core
     else
-        echo "Cloning project..."
         git clone https://github.com/adityathute/$DESTINATION_DIR.git "$DESTINATION_DIR"
         cd "$DESTINATION_DIR" || exit 1
         core
@@ -90,11 +70,10 @@ main() {
 
     # Check if user is already authenticated with GitHub
     if gh auth status &>/dev/null; then
-        echo "You are already authenticated with GitHub. Skipping login."
         build_setup
     else
         # If not authenticated, run gh auth login
-        echo "You are not authenticated with GitHub. Running gh auth login..."
+        echo "You are not authenticated with GitHub. login..."
         if gh auth login; then
             echo "GitHub authentication successful."
             build_setup
@@ -103,8 +82,6 @@ main() {
             exit 1
         fi
     fi
-
-    echo "Installation completed."
 }
 
 # Check operating system & Detect Linux distribution
