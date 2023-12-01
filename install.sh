@@ -145,7 +145,6 @@ arch_linux() {
 # Check operating system and distribution and also package manager
 if [ "$OS" == "linux" ]; then
     detect_distribution
-    echo "$DISTRO"
     case "$DISTRO" in
         "arch linux")
             arch_linux
