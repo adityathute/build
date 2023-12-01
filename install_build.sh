@@ -42,27 +42,28 @@ git_config() {
     set_config "user.email" "Enter your GitHub email: " "Email cannot be blank. Please enter your GitHub email: "
 }
 
-# Function to run core.py if it exists
-core() {
+# Function to set up the build project
+build_setup() {
+    DESTINATION_DIR="build_project"       # Specify the destination directory
+    BACKUP_DIR="build_project_old"        # Specify the backup directory name
+
+    # Check if build directory exists, move it to build_org
+    if [ -d "$DESTINATION_DIR" ]; then
+        # Check if build_org directory already exists, if yes, delete it
+        if [ -d "$BACKUP_DIR" ]; then
+            rm -rf "$BACKUP_DIR" || exit 1
+        fi
+        mv "$DESTINATION_DIR" "$BACKUP_DIR" || exit 1
+    fi
+
+    # Clone the repository into the build directory
+    git clone -b Master https://github.com/adityathute/build.git "$DESTINATION_DIR"
+    cd "$DESTINATION_DIR" || exit 1
+
+    # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
     if [ -f "core.py" ]; then
         python core.py "$OS" "$DISTRIBUTION"
     fi
-}
-
-# Function to set up the build project
-build_setup() {
-    DESTINATION_DIR="build"  # Specify the destination directory
-
-    if [ -d "$DESTINATION_DIR" ]; then
-        cd "$DESTINATION_DIR" || exit 1
-        git pull
-        core
-    else
-        git clone https://github.com/adityathute/$DESTINATION_DIR.git "$DESTINATION_DIR"
-        cd "$DESTINATION_DIR" || exit 1
-        core
-    fi
-
 }
 
 # Main script
