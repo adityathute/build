@@ -43,11 +43,14 @@ git_config() {
 }
 
 # Function to run core.py if it exists
-core() { [ -f "core.py" ] && python core.py; }
+core() {
+    if [ -f "core.py" ]; then
+        python core.py "$OS" "$DISTRIBUTION"
+    fi
+}
 
 # Function to set up the build project
 build_setup() {
-    PROJECTNAME="myProject"
     DESTINATION_DIR="build"  # Specify the destination directory
 
     if [ -d "$DESTINATION_DIR" ]; then
