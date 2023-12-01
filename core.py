@@ -1,7 +1,7 @@
 # core.py
 
 import sys
-from main import arch_linux
+from .main import arch_linux
 
 def core():
     # Accessing command-line arguments
