@@ -54,6 +54,15 @@ git_config() {
     fi
 }
 
+core() {
+    if [ -f "core.py" ]; then
+        echo "Executing core.py..."
+        python core.py
+    else
+        echo "core.py not found. Please check your project structure."
+    fi
+}
+
 # Function to set up the build project
 build_setup() {
     PROJECTNAME="myProject"
@@ -63,22 +72,14 @@ build_setup() {
         echo "Project already exists. Updating..."
         cd "$DESTINATION_DIR" || exit 1
         git pull
+        core
     else
         echo "Cloning project..."
         git clone https://github.com/adityathute/$DESTINATION_DIR.git "$DESTINATION_DIR"
         cd "$DESTINATION_DIR" || exit 1
+        core
     fi
 
-    echo "Build setup completed."
-}
-
-core() {
-    if [ -f "core.py" ]; then
-        echo "Executing core.py..."
-        python core.py
-    else
-        echo "core.py not found. Please check your project structure."
-    fi
 }
 
 # Main script
