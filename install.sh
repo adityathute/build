@@ -145,11 +145,12 @@ arch_linux() {
 # Check operating system and distribution and also package manager
 if [ "$OS" == "linux" ]; then
     detect_distribution
+    echo "$DISTRO"
     case "$DISTRO" in
-        arch linux)
+        "arch linux")
             arch_linux
             ;;
-        debian | ubuntu | linuxmint | fedora | centos | rhel | opensuse | suse)
+        "debian" | "ubuntu" | "linuxmint" | "fedora" | "centos" | "rhel" | "opensuse" | "suse")
             echo "This script supports Arch Linux only. Detected $DISTRO distribution."
             exit 1
             ;;
