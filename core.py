@@ -10,6 +10,7 @@ def main():
     if os_arg == "linux":
         # Function to detect Linux distribution
         detect_distribution()
+        print(f"OS: {os_arg}, Distribution: {distribution_arg}")
     elif os_arg == "macos":
         # Logic for macOS
         print(f"OS: {os_arg}")
@@ -20,7 +21,20 @@ def main():
         print(f"Unknown")
 
 def detect_distribution():
-    print(f"Unknown")
+    # Accessing command-line arguments
+    distribution_arg = sys.argv[2] if len(sys.argv) > 2 else "unknown"
+    pkgmanager_arg = sys.argv[3] if len(sys.argv) > 2 else "unknown"
+
+    if distribution_arg == "arch":
+        print("Detected Arch Linux...." , {pkgmanager_arg})
+    elif distribution_arg in ["debian", "ubuntu", "linuxmint"]:
+        print(f"Detected {distribution_arg} distribution....")
+    elif distribution_arg in ["fedora", "centos", "rhel"]:
+        print(f"Detected {distribution_arg} distribution....")
+    elif distribution_arg in ["opensuse", "suse"]:
+        print(f"Detected {distribution_arg} distribution....")
+    else:
+        print(f"Unknown distribution....")
 
 if __name__ == "__main__":
     main()

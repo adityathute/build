@@ -69,7 +69,7 @@ build_linux_setup() {
 
     # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
     if [ -f "core.py" ]; then
-        python core.py "$OS" "$DISTRIBUTION"
+        python core.py "$OS" "$DISTRIBUTION" "$PKGMANAGER"
     fi
 }
 
