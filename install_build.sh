@@ -5,18 +5,25 @@ check_os() { case "$OSTYPE" in linux*) OS="linux";; darwin*) OS="macos";; msys*)
 
 # Function to detect Linux distribution
 detect_distribution() {
-    if command -v lsb_release &>/dev/null; then
-        DISTRIBUTION=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
-    elif [ -e /etc/os-release ]; then
-        DISTRIBUTION=$(awk -F= '/^NAME/{gsub(/"/, "", $2); print tolower($2)}' /etc/os-release)
-        DISTRIBUTION=${DISTRIBUTION%% *}  # Extract the first word
-    elif [ -e /etc/debian_version ]; then
-        DISTRIBUTION="debian"
-    elif [ -e /etc/redhat-release ]; then
-        DISTRIBUTION="rhel"
-    else
-        DISTRIBUTION="unknown"
-    fi
+    case "$OS" in
+        linux)
+            if command -v lsb_release &>/dev/null; then
+                DISTRIBUTION=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
+            elif [ -e /etc/os-release ]; then
+                DISTRIBUTION=$(awk -F= '/^NAME/{gsub(/"/, "", $2); print tolower($2)}' /etc/os-release)
+                DISTRIBUTION=${DISTRIBUTION%% *}  # Extract the first word
+            elif [ -e /etc/debian_version ]; then
+                DISTRIBUTION="debian"
+            elif [ -e /etc/redhat-release ]; then
+                DISTRIBUTION="rhel"
+            else
+                DISTRIBUTION="unknown"
+            fi
+            ;;
+        *)
+            DISTRIBUTION="unknown"
+            ;;
+    esac
 }
 
 # Function to set up Git configuration
@@ -43,7 +50,7 @@ git_config() {
 }
 
 # Function to set up the build project
-build_setup() {
+build_linux_setup() {
     DESTINATION_DIR="build_project"       # Specify the destination directory
     BACKUP_DIR="build_project_old"        # Specify the backup directory name
 
@@ -67,20 +74,19 @@ build_setup() {
 }
 
 # Main script
-main() {
-
+main_linux() {
     sudo $PKGMANAGER -Sy --noconfirm git github-cli python
     git_config
 
     # Check if user is already authenticated with GitHub
     if gh auth status &>/dev/null; then
-        build_setup
+        build_linux_setup
     else
         # If not authenticated, run gh auth login
         echo "You are not authenticated with GitHub. login..."
         if gh auth login; then
             echo "GitHub authentication successful."
-            build_setup
+            build_linux_setup
         else
             echo "GitHub authentication failed. Exiting."
             exit 1
@@ -90,14 +96,14 @@ main() {
 
 # Check operating system & Detect Linux distribution
 check_os
-detect_distribution
 
 # Check operating system and distribution
 if [ "$OS" == "linux" ]; then
+    detect_distribution
     case "$DISTRIBUTION" in
         arch)
             PKGMANAGER="pacman"
-            main
+            main_linux
             ;;
         debian | ubuntu | linuxmint | fedora | centos | rhel | opensuse | suse)
             echo "This script supports Arch Linux only. Detected $DISTRIBUTION distribution."
