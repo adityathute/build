@@ -154,16 +154,16 @@ update_config() {
 
     # Check if NAME is not blank, update
     if [ ! -z "$FULL_NAME" ]; then
-        sed -i "s/NAME=.*/NAME=$FULL_NAME/" "$ENV_FILE"
+        sed -i "s/USER_NAME=.*/USER_NAME=$FULL_NAME/" "$ENV_FILE"
     fi
 
     # Check if GH_EMAIL is not blank, update
     if [ ! -z "$GITHUB_EMAIL" ]; then
-        sed -i "s/GH_EMAIL=.*/GH_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
+        sed -i "s/GIT_EMAIL=.*/GIT_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
     fi
 
     # Print the updated values
-    echo "Checking if all variables are saved: NAME=$FULL_NAME GH_EMAIL=$GITHUB_EMAIL"
+    echo "Checking if all variables are saved: USER_NAME=$FULL_NAME GIT_EMAIL=$GITHUB_EMAIL"
     read -p "Files saved. Check complete."
   else
     echo "Error: The $ENV_FILE file does not exist."
