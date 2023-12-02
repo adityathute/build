@@ -63,7 +63,7 @@ def is_package_installed(package_name, pkg_manager):
 
 # Install essential packages
 def install_packages(pkg_manager):
-    install_pkgs_command = f"sudo {pkg_manager} -S --noconfirm firefox nodejs npm mariadb-libs mariadb base-devel mariadb-install-db"
+    install_pkgs_command = f"sudo {pkg_manager} -S --noconfirm firefox nodejs npm base-devel mariadb"
     subprocess.run(install_pkgs_command, shell=True)
 
     # Check if 'yay' is installed
