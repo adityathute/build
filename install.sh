@@ -153,12 +153,12 @@ update_config() {
     source "$ENV_FILE"
 
     # Check if NAME is not blank, update
-    if [ -z "$FULL_NAME" ]; then
+    if [ ! -z "$FULL_NAME" ]; then
         sed -i "s/NAME=.*/NAME=$FULL_NAME/" "$ENV_FILE"
     fi
 
     # Check if GH_EMAIL is not blank, update
-    if [ -z "$GITHUB_EMAIL" ]; then
+    if [ ! -z "$GITHUB_EMAIL" ]; then
         sed -i "s/GH_EMAIL=.*/GH_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
     fi
 
