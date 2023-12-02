@@ -52,6 +52,39 @@ detect_distribution() {
     esac
 }
 
+ENV_FILE="/scripts/.env"
+
+# Function to configure or update the database password
+config_db_pass() {
+    if grep -q "^DB_PASSWORD=" "$ENV_FILE"; then
+        # If DB_PASSWORD is already set in the file, read it
+        source "$ENV_FILE"
+        echo "Database password is already set."
+    else
+        # If DB_PASSWORD is not set, prompt the user
+        while true; do
+            read -sp "Enter the database password: " db_password
+            echo    # Add a newline after the password input
+            read -sp "Re-enter the database password for verification: " db_password_verify
+            echo    # Add a newline after the verification input
+
+            if [ "$db_password" = "$db_password_verify" ]; then
+                # Update the DB_PASSWORD line in the .env file
+                sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$db_password/" "$ENV_FILE"
+                echo "Database password configured successfully."
+                break   # Break out of the loop if passwords match
+            else
+                echo "Passwords do not match. Please try again."
+            fi
+        done
+    fi
+
+    # Load the environment variables from the .env file
+    if [ -f "$ENV_FILE" ]; then
+        export $(grep -v '^#' "$ENV_FILE" | xargs)
+    fi
+}
+
 # Function to set up Git configuration
 git_config() {
     set_config() {
@@ -101,6 +134,8 @@ clone_build() {
 
 # Only for Arch Linux operating system
 arch_linux() {
+    config_db_pass
+
     # Upgrade all installed packages
     sudo pacman -Syu --noconfirm
 
