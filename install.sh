@@ -54,13 +54,40 @@ detect_distribution() {
 
 ENV_FILE="build_project/scripts/.env"
 
+get_info() {
+  # Check if FULL_NAME is blank in env file
+  if [ -z "$FULL_NAME" ]; then
+    read -p "Enter your full name: " full_name
+    export FULL_NAME="$full_name"
+
+    # Update .env file
+    echo "FULL_NAME=$FULL_NAME" >> "$ENV_FILE"
+  fi
+
+  # Check if GITHUB_EMAIL is blank in env file
+  if [ -z "$GITHUB_EMAIL" ]; then
+    read -p "Enter your GitHub email address: " github_email
+
+    # If GitHub email is blank, do not allow continuation
+    if [ -z "$github_email" ]; then
+      echo "GitHub email cannot be blank. Exiting."
+      exit 1
+    fi
+
+    export GITHUB_EMAIL="$github_email"
+
+    # Update .env file
+    echo "GITHUB_EMAIL=$GITHUB_EMAIL" >> "$ENV_FILE"
+  fi
+}
+
 # Function to configure or update the database password
 config_db_pass() {
     if grep -q "^DB_PASSWORD=" "$ENV_FILE"; then
         # If DB_PASSWORD is already set in the file, read it
         source "$ENV_FILE"
         if [ -z "$DB_PASSWORD" ]; then
-            echo "DB_PASSWORD is blank. Configuring a new password."
+            echo "Configuring a new password for DATABASE."
             configure_password
         fi
     else
@@ -94,26 +121,17 @@ configure_password() {
 }
 
 # Function to set up Git configuration
-git_config() {
-    set_config() {
-        local config_key=$1
-        local prompt_message=$2
-        local empty_message=$3
+config_git() {
+  # Check if Git user configuration is already set
+  if [ -z "$(git config --global user.name)" ] || [ -z "$(git config --global user.email)" ]; then
+    # Set Git configuration for name and email
+    git config --global user.name "$FULL_NAME"
+    git config --global user.email "$GITHUB_EMAIL"
 
-        if [ -z "$(git config --global --get "$config_key")" ]; then
-            read -p "$prompt_message" input_value
-
-            while [ -z "$input_value" ]; do
-                echo "$empty_message"
-                read -p "$prompt_message" input_value
-            done
-
-            git config --global "$config_key" "$input_value"
-        fi
-    }
-
-    set_config "user.name" "Enter your full name: " "Name cannot be blank. Please enter your full name: "
-    set_config "user.email" "Enter your GitHub email: " "Email cannot be blank. Please enter your GitHub email: "
+    echo "Git configuration set successfully."
+  else
+    echo "Git user configuration is already set. Skipping configuration."
+  fi
 }
 
 # Function to set up the clone build
@@ -142,6 +160,7 @@ clone_build() {
 
 # Only for Arch Linux operating system
 arch_linux() {
+    get_info
     config_db_pass
 
     # Upgrade all installed packages
@@ -151,7 +170,7 @@ arch_linux() {
     sudo pacman -S --noconfirm git github-cli python
 
     # Configure Git settings
-    git_config
+    config_git
 
     # Check if user is already authenticated with GitHub
     if gh auth status &>/dev/null; then
