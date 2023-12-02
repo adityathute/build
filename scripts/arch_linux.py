@@ -100,9 +100,6 @@ def run_command(command):
         print(f"Error: {e}")
 
 def config_db_server():
-    # Status of MariaDB service
-    run_command("sudo systemctl status mariadb")
-
     # Install MariaDB database
     run_command("sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql")
 
