@@ -63,7 +63,7 @@ def is_package_installed(package_name, pkg_manager):
 
 # Install essential packages
 def install_packages(pkg_manager):
-    install_pkgs_command = f"sudo {pkg_manager} -S --noconfirm firefox nodejs npm mariadb-libs mariadb base-devel"
+    install_pkgs_command = f"sudo {pkg_manager} -S --noconfirm firefox nodejs npm mariadb-libs mariadb base-devel mariadb-install-db"
     subprocess.run(install_pkgs_command, shell=True)
 
     # Check if 'yay' is installed
@@ -92,3 +92,38 @@ def install_packages(pkg_manager):
         shutil.rmtree("yay")
 
     print(f"System packages installed successfully.")
+
+def run_command(command):
+    try:
+        subprocess.run(command, check=True, shell=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+
+def config_db_server():
+    # Status of MariaDB service
+    run_command("sudo systemctl status mariadb")
+
+    # Install MariaDB database
+    run_command("sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql")
+
+    # Enable MariaDB service
+    run_command("sudo systemctl enable mariadb.service")
+
+    # Start MariaDB service
+    run_command("sudo systemctl start mariadb.service")
+
+    # # Connect to MariaDB as root
+    # run_command("mysql -u root -e 'FLUSH PRIVILEGES'")
+    # run_command("mysql -u root -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password'\"")
+
+    # # Connect to MariaDB with the new password
+    # run_command("mysql -u root -p -e 'CREATE DATABASE mydb'")
+
+    # # Additional commands as needed
+    # # ...
+
+    # # Stop MariaDB service
+    # run_command("sudo systemctl stop mariadb")
+
+    # # Start MariaDB service again if needed
+    # # run_command("sudo systemctl start mariadb")
