@@ -1,23 +1,31 @@
 #!/bin/bash
 
-# Function to update configuration
-update_config() {
-    # Check if the .env file exists
+# Function to update specific variables in the environment file
+update_file() {
+    local var_name=$1
+    # Check if the environment file exists and source it
     if source_env_file; then
-        # Check if USER_NAME is not blank, update
-        if [ ! -z "$USER_NAME" ]; then
+        # Update the environment file based on the specified variable
+        if [ "$var_name" = "FULL_NAME" ]; then
             sed -i "s/FULL_NAME=.*/FULL_NAME=$USER_NAME/" "$ENV_FILE"
         fi
-
-        # Check if GITHUB_EMAIL is not blank, update
-        if [ ! -z "$GITHUB_EMAIL" ]; then
+        if [ "$var_name" = "GIT_EMAIL" ]; then
             sed -i "s/GIT_EMAIL=.*/GIT_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
         fi
-
-        # Check if DB_PASSWORD is not blank, update
-        if [ ! -z "$DATABASE_PASSWORD" ]; then
+        if [ "$var_name" = "DB_PASSWORD" ]; then
             sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=$DATABASE_PASSWORD/" "$ENV_FILE"
         fi
+    fi
+}
+
+# Function to update configuration based on global CONFIG variable
+update_config() {
+    # Check if CONFIG is set to true
+    if [ "$CONFIG" = true ]; then
+        # Update specific variables in the environment file
+        update_file "FULL_NAME"
+        update_file "GIT_EMAIL"
+        update_file "DB_PASSWORD"
     fi
 }
 
@@ -45,22 +53,27 @@ clone_build() {
     fi
 }
 
+# Function to authenticate with GitHub
 auth_github() {
     # Check if user is already authenticated with GitHub
     if gh auth status &>/dev/null; then
+        # User is authenticated, proceed to clone_build
         clone_build
     else
-        # If not authenticated, run gh auth login
+        # User is not authenticated, prompt for login
         echo "You are not authenticated with GitHub. Logging in..."
 
         while true; do
+            # Attempt GitHub authentication
             if gh auth login; then
                 echo "GitHub authentication successful."
                 clone_build
                 break
             else
+                # GitHub authentication failed
                 echo "GitHub authentication failed."
-
+                
+                # Prompt user to retry or exit
                 read -rp "Press any key to try again, or 'Q' to exit: " choice
 
                 case "$choice" in
@@ -95,6 +108,7 @@ config_git() {
   fi
 }
 
+# Function to handle system package upgrades and installations
 sys_packages() {
     # Upgrade all installed packages
     sudo pacman -Syu --noconfirm
@@ -124,6 +138,7 @@ configure_password() {
             echo "Password cannot be blank. Please enter a valid password."
         fi
     done
+    # Export the value of db_password as an environment variable named DATABASE_PASSWORD
     export DATABASE_PASSWORD="$db_password"
 }
 
@@ -153,47 +168,73 @@ get_input_user() {
       return
     fi
 
+    # Prompt the user to enter a value for the specified variable
     read -p "Enter your $var_name: " input_value
+
+    # Remove leading and trailing whitespaces from the input
     input_value=$(echo "$input_value" | xargs)
 
+    # Check if the input value is empty
     if [ -z "$input_value" ]; then
       echo "Blank not allowed. Please enter a valid value."
     else
-      # Capitalize the first letter of each word only if var_name is "USER_NAME"
-      if [ "$var_name" = "USER_NAME" ]; then
-        input_value=$(echo "$input_value" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2));}1')
-      fi
-      
-      # Convert email to lowercase if var_name is "GITHUB_EMAIL"
-      if [ "$var_name" = "GITHUB_EMAIL" ]; then
-        input_value=$(echo "$input_value" | tr '[:upper:]' '[:lower:]')
-      fi
+        # Check if the variable name is "USER_NAME"
+        if [ "$var_name" = "USER_NAME" ]; then
+            # Transform the input to title case (capitalize the first letter of each word)
+            formatted_value=$(echo "$input_value" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2));}1' | sed 's/^"\(.*\)"$/\1/')
+            # Enclose the formatted value in double quotes
+            formatted_value="\"$formatted_value\""
+            # Update the input value with the formatted value
+            input_value="$formatted_value"
+        fi
+        
+        # Check if the variable name is "GITHUB_EMAIL"
+        if [ "$var_name" = "GITHUB_EMAIL" ]; then
+            # Convert the input value to lowercase
+            input_value=$(echo "$input_value" | tr '[:upper:]' '[:lower:]')
+        fi
 
-      # Assign the input value to the global variable
-      eval "$var_name=\$input_value"
+        # Assign the input value to the global variable
+        eval "$var_name=\$input_value"
     fi
   done
 }
 
+# Function to check and set the value of a specified variable
 check_input_file() {
-    # Check if required variables are blank
-    if [ -z "$FULL_NAME" ]; then
-      get_input_user "USER_NAME"
-    fi
+    local VARIABLE_TO_CHECK=$1  # Get the variable name as an argument
 
-    if [ -z "$GIT_EMAIL" ]; then
-      get_input_user "GITHUB_EMAIL"
-    fi
+    # Extract the value of the specified variable from the environment file
+    VARIABLE_VALUE=$(grep "^$VARIABLE_TO_CHECK=" "$ENV_FILE" | cut -d '=' -f2- | tr -d '[:space:]')
 
-    if [ -z "$DB_PASSWORD" ]; then
-      config_db_pass
+    # Check if the variable value is set
+    if [ -z "$VARIABLE_VALUE" ]; then
+        # Variable is not set, set it based on conditions
+
+        # Check if the variable to set is "FULL_NAME"
+        if [ "$VARIABLE_TO_CHECK" = "FULL_NAME" ]; then
+            # If yes, prompt user for "USER_NAME"
+            get_input_user "USER_NAME"
+        # Check if the variable to set is "GIT_EMAIL"
+        elif [ "$VARIABLE_TO_CHECK" = "GIT_EMAIL" ]; then
+            # If yes, prompt user for "GITHUB_EMAIL"
+            get_input_user "GITHUB_EMAIL"
+        # Check if the variable to set is "DB_PASSWORD"
+        elif [ "$VARIABLE_TO_CHECK" = "DB_PASSWORD" ]; then
+            # If yes, configure the database password
+            config_db_pass
+        fi
+
+        # Update specific variables in the environment file
+        update_file "$VARIABLE_TO_CHECK"
+
     fi
 }
 
 # Declare global variables
 ENV_FILE="build_project/scripts/.env"
 
-# Function to check if the environment file exists and source it
+# Function to source the environment file
 source_env_file() {
   if [ -f "$ENV_FILE" ]; then
     source "$ENV_FILE"
@@ -203,26 +244,44 @@ source_env_file() {
   fi
 }
 
+# Declare global variables
 BUILD="build_project"
+CONFIG=false
 
+# Function to initialize configuration
 initialization() {
     # check BUILD folder is found
-    if [ -d "$BUILD" ]; then 
+    if [ -d "$BUILD" ]; then
+        # If BUILD folder is found, try sourcing environment file
         if source_env_file; then
-            check_input_file
+            # Environment file found, check input files
+            check_input_file "FULL_NAME"
+            check_input_file "GIT_EMAIL"
+            check_input_file "DB_PASSWORD"
+            CONFIG=false
+        else
+            # Environment file not found, prompt user for input
+            get_input_user "USER_NAME"
+            get_input_user "GITHUB_EMAIL"
+            config_db_pass
+            CONFIG=true
         fi
     else
-        # if build_project folder is not found
+        # BUILD folder not found, prompt user for input
         get_input_user "USER_NAME"
         get_input_user "GITHUB_EMAIL"
         config_db_pass
+        CONFIG=true
     fi
 }
 
-# Only for Arch Linux operating system
+# Function to handle Arch Linux specific configuration
 arch_linux() {
-    # Initialization
+    # Initialization - Checks and sets initial configuration
     initialization
+
+    # Prompt the user to press any key before continuing
+    echo -n "Configuration is set successfully. Press any key to continue..." && read -n 1 -s && echo -e "\r\033[KContinuing with the script..."
 
     # Upgrade and install system packages
     sys_packages
@@ -230,7 +289,7 @@ arch_linux() {
     # Configure Git settings
     config_git
 
-    # Auth Github
+    # Authenticate with GitHub
     auth_github
 }
 
@@ -273,7 +332,7 @@ detect_distribution() {
     esac
 }
 
-# Function to check the operating system
+# Function to check the operating system based on OSTYPE
 check_os() {
     case "$OSTYPE" in
         linux*) OS="linux";;
@@ -283,12 +342,15 @@ check_os() {
     esac
 }
 
-# Check operating system
+# Call the check_os function to determine the operating system
 check_os
 
-# Check operating system and distribution and also package manager
+# Check the operating system and take appropriate actions
 if [ "$OS" == "linux" ]; then
+    # If the operating system is Linux, detect the distribution
     detect_distribution
+
+    # Check the detected distribution and perform actions accordingly
     case "$DISTRO" in
         "arch linux")
             arch_linux
@@ -303,12 +365,15 @@ if [ "$OS" == "linux" ]; then
             ;;
     esac
 elif [ "$OS" == "macos" ]; then
+    # If the operating system is macOS, print an error message and exit
     echo "This script supports Arch Linux only. Detected $OS operating system."
     exit 1
 elif [ "$OS" == "windows" ]; then
+    # If the operating system is Windows, print an error message and exit
     echo "This script supports Arch Linux only. Detected $OS operating system."
     exit 1
 else
+    # If the operating system is unknown, print an error message and exit
     echo "Unsupported operating system. Exiting."
     exit 1
 fi
