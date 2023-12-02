@@ -52,52 +52,97 @@ detect_distribution() {
     esac
 }
 
+# Declare global variables
 ENV_FILE="build_project/scripts/.env"
 
-get_info() {
-  # Check if FULL_NAME is blank in env file
-  if [ -z "$FULL_NAME" ]; then
-    read -p "Enter your full name: " full_name
-    export FULL_NAME="$full_name"
-
-    # Update .env file
-    echo "FULL_NAME=$FULL_NAME" >> "$ENV_FILE"
+# Function to check if the environment file exists and source it
+source_env_file() {
+  if [ -f "$ENV_FILE" ]; then
+    source "$ENV_FILE"
+    return 0  # Return true (0) to indicate success
+  else
+    return 1  # Return false (1) to indicate failure
   fi
+}
 
-  # Check if GITHUB_EMAIL is blank in env file
-  if [ -z "$GITHUB_EMAIL" ]; then
-    read -p "Enter your GitHub email address: " github_email
+# Function to get user information
+get_info_user() {
+  local var_name=$1  # Get the variable name as an argument
 
-    # If GitHub email is blank, do not allow continuation
-    if [ -z "$github_email" ]; then
-      echo "GitHub email cannot be blank. Exiting."
-      exit 1
+  while [ -z "${!var_name}" ]; do
+    # Check if the variable exists globally
+    if [ -n "${!var_name}" ]; then
+      echo "$var_name is already set to ${!var_name}."
+      return
     fi
 
-    export GITHUB_EMAIL="$github_email"
+    read -p "Enter your $var_name: " input_value
+    input_value=$(echo "$input_value" | xargs)
 
-    # Update .env file
-    echo "GITHUB_EMAIL=$GITHUB_EMAIL" >> "$ENV_FILE"
+    if [ -z "$input_value" ]; then
+      echo "Blank not allowed. Please enter a valid value."
+    else
+      # Assign the input value to the global variable
+      eval "$var_name=\$input_value"
+    fi
+  done
+}
+
+get_info() {
+  # Check if the environment file exists and source it
+  if source_env_file; then
+    echo "ENV file is found."
+  else
+    get_info_user "FULL_NAME"
+    get_info_user "GITHUB_EMAIL"
+  fi
+}
+
+# Function to update configuration
+update_config() {
+  # Print the initial values
+  echo "Checking if all variables are saved: FULL_NAME=$FULL_NAME GITHUB_EMAIL=$GITHUB_EMAIL"
+
+  # Check if the .env file exists
+  if [ -f "$ENV_FILE" ]; then
+    # Source the .env file to set environment variables
+    source "$ENV_FILE"
+
+    # Check if FULL_NAME is blank, update if needed
+    if [ -z "$FULL_NAME" ]; then
+      sed -i "s/FULL_NAME=.*/FULL_NAME=$FULL_NAME/" "$ENV_FILE"
+    fi
+
+    # Check if GITHUB_EMAIL is blank, update if needed
+    if [ -z "$GITHUB_EMAIL" ]; then
+      sed -i "s/GITHUB_EMAIL=.*/GITHUB_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
+    fi
+
+    # Print the updated values
+    echo "Checking if all variables are saved: FULL_NAME=$FULL_NAME GITHUB_EMAIL=$GITHUB_EMAIL"
+    read -p "Files saved. Check complete."
+  else
+    echo "Error: The $ENV_FILE file does not exist."
   fi
 }
 
 # Function to configure or update the database password
 config_db_pass() {
-    if grep -q "^DB_PASSWORD=" "$ENV_FILE"; then
-        # If DB_PASSWORD is already set in the file, read it
+    # Check if the environment file exists
+    if [ -f "$ENV_FILE" ]; then
+        # Source the environment file to load variables
         source "$ENV_FILE"
+
+        # Check if DB_PASSWORD is already set in the file
         if [ -z "$DB_PASSWORD" ]; then
+            # If DB_PASSWORD is blank, configure a new password
             echo "Configuring a new password for DATABASE."
             configure_password
         fi
     else
-        # If DB_PASSWORD is not set, configure a new password
+        # If the environment file doesn't exist, configure a new password
+        echo "Configuring a new password for DATABASE."
         configure_password
-    fi
-
-    # Load the environment variables from the .env file
-    if [ -f "$ENV_FILE" ]; then
-        export $(grep -v '^#' "$ENV_FILE" | xargs)
     fi
 }
 
@@ -106,18 +151,23 @@ configure_password() {
     while true; do
         read -sp "Enter the database password: " db_password
         echo    # Add a newline after the password input
-        read -sp "Re-enter the database password for verification: " db_password_verify
-        echo    # Add a newline after the verification input
 
-        if [ "$db_password" = "$db_password_verify" ]; then
-            # Update the DB_PASSWORD line in the .env file
-            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=$db_password/" "$ENV_FILE"
-            echo "Database password configured successfully."
-            break   # Break out of the loop if passwords match
+        # Check if the entered password is not blank
+        if [ -n "$db_password" ]; then
+            read -sp "Re-enter the database password for verification: " db_password_verify
+            echo    # Add a newline after the verification input
+
+            if [ "$db_password" = "$db_password_verify" ]; then
+                echo "Database password configured successfully."
+                break   # Break out of the loop if passwords match
+            else
+                echo "Passwords do not match. Please try again."
+            fi
         else
-            echo "Passwords do not match. Please try again."
+            echo "Password cannot be blank. Please enter a valid password."
         fi
     done
+    export DB_PASSWORD="$db_password"
 }
 
 # Function to set up Git configuration
@@ -137,24 +187,26 @@ config_git() {
 # Function to set up the clone build
 clone_build() {
     DEST_DIR="build_project"       # Specify the destination directory
-    BKUP_DIR="build_project_old"   # Specify the backup directory name
 
-    # Check if build directory exists, move it to build_org
+    # Check if build directory exists
     if [ -d "$DEST_DIR" ]; then
-        # Check if build_org directory already exists, if yes, delete it
-        if [ -d "$BKUP_DIR" ]; then
-            rm -rf "$BKUP_DIR" || exit 1
+        update_config
+        cd "$DEST_DIR" || exit 1
+
+        # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
+        if [ -f "core.py" ]; then
+            python core.py "$OS" "$DISTRO"
         fi
-        mv "$DEST_DIR" "$BKUP_DIR" || exit 1
-    fi
+    else
+        # Clone the repository into the build directory
+        git clone -b Master https://github.com/adityathute/build.git "$DEST_DIR"
+        update_config
+        cd "$DEST_DIR" || exit 1
 
-    # Clone the repository into the build directory
-    git clone -b Master https://github.com/adityathute/build.git "$DEST_DIR"
-    cd "$DEST_DIR" || exit 1
-
-    # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
-    if [ -f "core.py" ]; then
-        python core.py "$OS" "$DISTRO"
+        # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
+        if [ -f "core.py" ]; then
+            python core.py "$OS" "$DISTRO"
+        fi
     fi
 }
 
