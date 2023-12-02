@@ -82,6 +82,16 @@ get_info_user() {
     if [ -z "$input_value" ]; then
       echo "Blank not allowed. Please enter a valid value."
     else
+      # Capitalize the first letter of each word only if var_name is "FULL_NAME"
+      if [ "$var_name" = "FULL_NAME" ]; then
+        input_value=$(echo "$input_value" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2));}1')
+      fi
+      
+      # Convert email to lowercase if var_name is "GITHUB_EMAIL"
+      if [ "$var_name" = "GITHUB_EMAIL" ]; then
+        input_value=$(echo "$input_value" | tr '[:upper:]' '[:lower:]')
+      fi
+
       # Assign the input value to the global variable
       eval "$var_name=\$input_value"
     fi
@@ -101,10 +111,7 @@ get_info() {
 # Function to configure or update the database password
 config_db_pass() {
     # Check if the environment file exists
-    if [ -f "$ENV_FILE" ]; then
-        # Source the environment file to load variables
-        source "$ENV_FILE"
-
+    if source_env_file; then
         # Check if DB_PASSWORD is already set in the file
         if [ -z "$DB_PASSWORD" ]; then
             # If DB_PASSWORD is blank, configure a new password
@@ -126,7 +133,7 @@ configure_password() {
 
         # Check if the entered password is not blank
         if [ -n "$db_password" ]; then
-            read -sp "Re-enter the database password for verification: " db_password_verify
+            read -sp "Re-enter the database password: " db_password_verify
             echo    # Add a newline after the verification input
 
             if [ "$db_password" = "$db_password_verify" ]; then
@@ -139,35 +146,28 @@ configure_password() {
             echo "Password cannot be blank. Please enter a valid password."
         fi
     done
-    export DB_PASSWORD="$db_password"
+    export DATABASE_PASSWORD="$db_password"
 }
 
 # Function to update configuration
 update_config() {
-  # Print the initial values
-  echo "Checking if all variables are saved in global variables: FULL_NAME=$FULL_NAME GITHUB_EMAIL=$GITHUB_EMAIL"
+    # Check if the .env file exists
+    if source_env_file; then
+        # Check if FULL_NAME is not blank, update
+        if [ ! -z "$FULL_NAME" ]; then
+            sed -i "s/USER_NAME=.*/USER_NAME=$FULL_NAME/" "$ENV_FILE"
+        fi
 
-  # Check if the .env file exists
-  if [ -f "$ENV_FILE" ]; then
-    # Source the .env file to set environment variables
-    source "$ENV_FILE"
+        # Check if GITHUB_EMAIL is not blank, update
+        if [ ! -z "$GITHUB_EMAIL" ]; then
+            sed -i "s/GIT_EMAIL=.*/GIT_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
+        fi
 
-    # Check if NAME is not blank, update
-    if [ ! -z "$FULL_NAME" ]; then
-        sed -i "s/USER_NAME=.*/USER_NAME=$FULL_NAME/" "$ENV_FILE"
+        # Check if DB_PASSWORD is not blank, update
+        if [ ! -z "$DATABASE_PASSWORD" ]; then
+            sed -i "s/DB_PASSWORD=.*/DB_PASSWORD=$DATABASE_PASSWORD/" "$ENV_FILE"
+        fi
     fi
-
-    # Check if GH_EMAIL is not blank, update
-    if [ ! -z "$GITHUB_EMAIL" ]; then
-        sed -i "s/GIT_EMAIL=.*/GIT_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
-    fi
-
-    # Print the updated values
-    echo "Checking if all variables are saved: USER_NAME=$FULL_NAME GIT_EMAIL=$GITHUB_EMAIL"
-    read -p "Files saved. Check complete."
-  else
-    echo "Error: The $ENV_FILE file does not exist."
-  fi
 }
 
 # Function to set up Git configuration
