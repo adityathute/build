@@ -98,34 +98,6 @@ get_info() {
   fi
 }
 
-# Function to update configuration
-update_config() {
-  # Print the initial values
-  echo "Checking if all variables are saved: FULL_NAME=$FULL_NAME GITHUB_EMAIL=$GITHUB_EMAIL"
-
-  # Check if the .env file exists
-  if [ -f "$ENV_FILE" ]; then
-    # Source the .env file to set environment variables
-    source "$ENV_FILE"
-
-    # Check if FULL_NAME is blank, update if needed
-    if [ -z "$FULL_NAME" ]; then
-      sed -i "s/FULL_NAME=.*/FULL_NAME=$FULL_NAME/" "$ENV_FILE"
-    fi
-
-    # Check if GITHUB_EMAIL is blank, update if needed
-    if [ -z "$GITHUB_EMAIL" ]; then
-      sed -i "s/GITHUB_EMAIL=.*/GITHUB_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
-    fi
-
-    # Print the updated values
-    echo "Checking if all variables are saved: FULL_NAME=$FULL_NAME GITHUB_EMAIL=$GITHUB_EMAIL"
-    read -p "Files saved. Check complete."
-  else
-    echo "Error: The $ENV_FILE file does not exist."
-  fi
-}
-
 # Function to configure or update the database password
 config_db_pass() {
     # Check if the environment file exists
@@ -168,6 +140,34 @@ configure_password() {
         fi
     done
     export DB_PASSWORD="$db_password"
+}
+
+# Function to update configuration
+update_config() {
+  # Print the initial values
+  echo "Checking if all variables are saved in global variables: FULL_NAME=$FULL_NAME GITHUB_EMAIL=$GITHUB_EMAIL"
+
+  # Check if the .env file exists
+  if [ -f "$ENV_FILE" ]; then
+    # Source the .env file to set environment variables
+    source "$ENV_FILE"
+
+    # Check if NAME is not blank, update
+    if [ -z "$FULL_NAME" ]; then
+        sed -i "s/NAME=.*/NAME=$FULL_NAME/" "$ENV_FILE"
+    fi
+
+    # Check if GH_EMAIL is not blank, update
+    if [ -z "$GITHUB_EMAIL" ]; then
+        sed -i "s/GH_EMAIL=.*/GH_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
+    fi
+
+    # Print the updated values
+    echo "Checking if all variables are saved: NAME=$FULL_NAME GH_EMAIL=$GITHUB_EMAIL"
+    read -p "Files saved. Check complete."
+  else
+    echo "Error: The $ENV_FILE file does not exist."
+  fi
 }
 
 # Function to set up Git configuration
