@@ -102,26 +102,17 @@ def run_command(command):
 def config_db_server():
     pass
     # Install MariaDB database
-    # run_command("sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql")
+    run_command("sudo mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql")
 
     # Enable MariaDB service
-    # run_command("sudo systemctl enable mariadb.service")
+    run_command("sudo systemctl start mariadb")
 
     # Start MariaDB service
-    # run_command("sudo systemctl start mariadb.service")
+    run_command("sudo systemctl status mariadb")
 
-    # # Connect to MariaDB as root
-    # run_command("mysql -u root -e 'FLUSH PRIVILEGES'")
-    # run_command("mysql -u root -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password'\"")
+    # Set the desired password
+    db_password = "Anonymous@#633911"
 
-    # # Connect to MariaDB with the new password
-    # run_command("mysql -u root -p -e 'CREATE DATABASE mydb'")
-
-    # # Additional commands as needed
-    # # ...
-
-    # # Stop MariaDB service
-    # run_command("sudo systemctl stop mariadb")
-
-    # # Start MariaDB service again if needed
-    # # run_command("sudo systemctl start mariadb")
+    # Command to run mariadb-secure-installation
+    command = f"sudo mariadb-admin --user=root password '{db_password}'"
+    run_command(command)
