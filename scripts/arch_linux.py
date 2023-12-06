@@ -95,17 +95,13 @@ def install_packages(pkg_manager):
 
 def run_command(command, capture_output=False):
     try:
-        if capture_output:
-            result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
-            return result.stdout.strip()
-        else:
-            subprocess.run(command, shell=True, check=True)
+        result = subprocess.run(command, shell=True, capture_output=capture_output, text=True, check=True)
+        return result.stdout.strip() if capture_output else ""
     except subprocess.CalledProcessError as e:
         print(f"Error executing command: {e}")
-        # You may want to handle the error or raise an exception here
-
+        return "" if capture_output else None
+    
 def get_env_data(env_path, input_key, default):
-
     # Check if the .env file exists
     if os.path.exists(env_path):
         with open(env_path, "r") as file:
