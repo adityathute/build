@@ -1,13 +1,42 @@
 #!/bin/bash
 
+# Check if the terminal supports colors
+if [ -t 1 ] && command -v tput > /dev/null; then
+    color_dark_red=$(tput setaf 1)
+    color_light_green=$(tput setaf 2)
+    color_yellow=$(tput setaf 3)
+    color_blue=$(tput setaf 4)
+    color_purple=$(tput setaf 5)
+    color_dark_green=$(tput setaf 6)
+    color_white=$(tput setaf 7)
+    color_grey=$(tput setaf 8)
+    color_light_red=$(tput setaf 9)
+    color_bold=$(tput bold)
+    color_reset=$(tput sgr0)
+else
+    # Set variables to empty strings if colors are not supported
+    color_dark_red=""
+    color_light_green=""
+    color_yellow=""
+    color_blue=""
+    color_purple=""
+    color_dark_green=""
+    color_white=""
+    color_grey=""
+    color_light_red=""
+    color_bold=""
+    color_reset=""
+fi
+checkmark_symbol="✓"
+
 # Function to update specific variables in the environment file
 update_file() {
     local var_name=$1
     # Check if the environment file exists and source it
     if source_env_file; then
         # Update the environment file based on the specified variable
-        if [ "$var_name" = "FULL_NAME" ]; then
-            sed -i "s/FULL_NAME=.*/FULL_NAME=$USER_NAME/" "$ENV_FILE"
+        if [ "$var_name" = "FULL_USER_NAME" ]; then
+            sed -i "s/FULL_USER_NAME=.*/FULL_USER_NAME=$USER_NAME/" "$ENV_FILE"
         fi
         if [ "$var_name" = "GIT_EMAIL" ]; then
             sed -i "s/GIT_EMAIL=.*/GIT_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
@@ -23,7 +52,7 @@ update_config() {
     # Check if CONFIG is set to true
     if [ "$CONFIG" = true ]; then
         # Update specific variables in the environment file
-        update_file "FULL_NAME"
+        update_file "FULL_USER_NAME"
         update_file "GIT_EMAIL"
         update_file "DB_PASSWORD"
     fi
@@ -96,7 +125,7 @@ config_git() {
   if [ -z "$(git config --global user.name)" ] || [ -z "$(git config --global user.email)" ]; then
     if [ -z "$(git config --global user.name)" ]; then
         # Set Git configuration for name
-        git config --global user.name "$USER_NAME"
+        git config --global user.name "$FULL_NAME"
     fi
     if [ -z "$(git config --global user.email)" ]; then
         # Set Git configuration for email
@@ -162,24 +191,20 @@ get_input_user() {
   local var_name=$1  # Get the variable name as an argument
 
   while [ -z "${!var_name}" ]; do
-    # Check if the variable exists globally
-    if [ -n "${!var_name}" ]; then
-      echo "$var_name is already set to ${!var_name}."
-      return
-    fi
-
     # Prompt the user to enter a value for the specified variable
-    read -p "Enter your $var_name: " input_value
+    read -e -p "${color_blue}${color_bold}Enter your $var_name: ${color_reset}" input_value
 
     # Remove leading and trailing whitespaces from the input
     input_value=$(echo "$input_value" | xargs)
 
     # Check if the input value is empty
     if [ -z "$input_value" ]; then
-      echo "Blank not allowed. Please enter a valid value."
+        tput cuu1
+        tput el
+        echo "${color_dark_red}${color_bold}Blank not allowed. Please enter a valid value.${color_reset}"
     else
-        # Check if the variable name is "USER_NAME"
-        if [ "$var_name" = "USER_NAME" ]; then
+        # Check if the variable name is "FULL_NAME"
+        if [ "$var_name" = "FULL_NAME" ]; then
             # Transform the input to title case (capitalize the first letter of each word)
             formatted_value=$(echo "$input_value" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2));}1' | sed 's/^"\(.*\)"$/\1/')
             # Enclose the formatted value in double quotes
@@ -207,14 +232,14 @@ check_input_file() {
     # Extract the value of the specified variable from the environment file
     VARIABLE_VALUE=$(grep "^$VARIABLE_TO_CHECK=" "$ENV_FILE" | cut -d '=' -f2- | tr -d '[:space:]')
 
-    # Check if the variable value is set
+    # Check if the variable value is empty
     if [ -z "$VARIABLE_VALUE" ]; then
         # Variable is not set, set it based on conditions
 
-        # Check if the variable to set is "FULL_NAME"
-        if [ "$VARIABLE_TO_CHECK" = "FULL_NAME" ]; then
-            # If yes, prompt user for "USER_NAME"
-            get_input_user "USER_NAME"
+        # Check if the variable to set is "FULL_USER_NAME"
+        if [ "$VARIABLE_TO_CHECK" = "FULL_USER_NAME" ]; then
+            # If yes, prompt user for "FULL_NAME"
+            get_input_user "FULL_NAME"
         # Check if the variable to set is "GIT_EMAIL"
         elif [ "$VARIABLE_TO_CHECK" = "GIT_EMAIL" ]; then
             # If yes, prompt user for "GITHUB_EMAIL"
@@ -233,6 +258,8 @@ check_input_file() {
 
 # Declare global variables
 ENV_FILE="build_project/scripts/.env"
+# Initialize ERROR_CODE as false
+ERROR_CODE=false
 
 # Function to source the environment file
 source_env_file() {
@@ -255,20 +282,20 @@ initialization() {
         # If BUILD folder is found, try sourcing environment file
         if source_env_file; then
             # Environment file found, check input files
-            check_input_file "FULL_NAME"
+            check_input_file "FULL_USER_NAME"
             check_input_file "GIT_EMAIL"
             check_input_file "DB_PASSWORD"
             CONFIG=false
         else
             # Environment file not found, prompt user for input
-            get_input_user "USER_NAME"
+            get_input_user "FULL_NAME"
             get_input_user "GITHUB_EMAIL"
             config_db_pass
             CONFIG=true
         fi
     else
         # BUILD folder not found, prompt user for input
-        get_input_user "USER_NAME"
+        get_input_user "FULL_NAME"
         get_input_user "GITHUB_EMAIL"
         config_db_pass
         CONFIG=true
