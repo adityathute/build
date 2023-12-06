@@ -91,28 +91,28 @@ auth_github() {
         clone_build
     else
         # User is not authenticated, prompt for login
-        echo "You are not authenticated with GitHub. Logging in..."
+        echo "${color_dark_red}${color_bold}You are not authenticated with GitHub.${color_reset} ${color_grey}${color_bold}Logging in...${color_reset}"
 
         while true; do
             # Attempt GitHub authentication
             if gh auth login; then
-                echo "GitHub authentication successful."
+                echo "${color_light_green}${color_bold}${checkmark_symbol} GitHub authentication successful.${color_reset}"
                 clone_build
                 break
             else
                 # GitHub authentication failed
-                echo "GitHub authentication failed."
+                echo "${color_dark_red}${color_bold}GitHub authentication failed.${color_reset}"
                 
                 # Prompt user to retry or exit
-                read -rp "Press any key to try again, or 'Q' to exit: " choice
+                read -rp "${color_white}${color_bold}Press any key to try again, or 'Q' to exit: ${color_reset}" choice
 
                 case "$choice" in
                     [qQ])
-                        echo "Exiting."
+                        echo "${color_dark_red}${color_bold}Exiting.${color_reset}"
                         exit 1
                         ;;
                     *)
-                        echo "Retrying GitHub authentication..."
+                        echo "${color_purple}${color_bold}Retrying GitHub authentication...${color_reset}"
                         ;;
                 esac
             fi
@@ -132,9 +132,7 @@ config_git() {
         # Set Git configuration for email
         git config --global user.email "$GITHUB_EMAIL"
     fi
-    echo "Git configuration set successfully."
-  else
-    echo "Git user configuration is already set. Skipping configuration."
+    echo "${color_light_green}${color_bold}Git configuration set successfully.${color_reset}"
   fi
 }
 
@@ -451,24 +449,24 @@ if [ "$OS" == "linux" ]; then
             arch_linux
             ;;
         "debian" | "ubuntu" | "linuxmint" | "fedora" | "centos" | "rhel" | "opensuse" | "suse")
-            echo "This script supports Arch Linux only. Detected $DISTRO distribution."
+            echo "${color_dark_red}${color_bold}This script supports Arch Linux only. Detected $DISTRO distribution.${color_reset}"
             exit 1
             ;;
         *)
-            echo "This script supports Arch Linux only. Detected $DISTRO distribution."
+            echo "${color_dark_red}${color_bold}This script supports Arch Linux only. Detected $DISTRO distribution.${color_reset}"
             exit 1
             ;;
     esac
 elif [ "$OS" == "macos" ]; then
     # If the operating system is macOS, print an error message and exit
-    echo "This script supports Arch Linux only. Detected $OS operating system."
+    echo "${color_dark_red}${color_bold}This script supports Arch Linux only. Detected $OS operating system.${color_reset}"
     exit 1
 elif [ "$OS" == "windows" ]; then
     # If the operating system is Windows, print an error message and exit
-    echo "This script supports Arch Linux only. Detected $OS operating system."
+    echo "${color_dark_red}${color_bold}This script supports Arch Linux only. Detected $OS operating system.${color_reset}"
     exit 1
 else
     # If the operating system is unknown, print an error message and exit
-    echo "Unsupported operating system. Exiting."
+    echo "${color_dark_red}${color_bold}Unsupported operating system. Exiting.${color_reset}"
     exit 1
 fi
