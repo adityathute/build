@@ -137,7 +137,14 @@ def config_db_server(env_path):
     db_exists_command = f"sudo mariadb -u root -p'{db_password}' -e \"SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='{db_name}'\""
 
     user_exists = run_command(user_exists_command, capture_output=True).strip()
-    db_exists = run_command(db_exists_command, capture_output=True).strip()
+
+    try:
+        db_exists_output = subprocess.check_output(db_exists_command, shell=True, stderr=subprocess.STDOUT, text=True)
+        db_exists = db_name in db_exists_output.strip()
+    except subprocess.CalledProcessError as e:
+        # Handle errors, if any
+        print(f"Error checking database existence: {e}")
+        db_exists = False
 
     if not user_exists:
         # Command to set root password
