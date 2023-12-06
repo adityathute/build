@@ -36,7 +36,7 @@ update_file() {
     if source_env_file; then
         # Update the environment file based on the specified variable
         if [ "$var_name" = "FULL_USER_NAME" ]; then
-            sed -i "s/FULL_USER_NAME=.*/FULL_USER_NAME=$FULL_USER_NAME/" "$ENV_FILE"
+            sed -i "s/FULL_USER_NAME=.*/FULL_USER_NAME=$FULL_NAME/" "$ENV_FILE"
         fi
         if [ "$var_name" = "GIT_EMAIL" ]; then
             sed -i "s/GIT_EMAIL=.*/GIT_EMAIL=$GITHUB_EMAIL/" "$ENV_FILE"
