@@ -7,11 +7,12 @@ def core():
     # Accessing command-line arguments
     os_arg = sys.argv[1] if len(sys.argv) > 1 else "unknown"
     distribution_arg = sys.argv[2] if len(sys.argv) > 2 else "unknown"
+    env_file_path = sys.argv[3] if len(sys.argv) > 3 else "unknown"
 
     if os_arg == "linux":
         # Function to detect Linux distribution
         if distribution_arg == "arch linux":
-            arch_linux()
+            arch_linux(env_file_path)
     else:
         print(f"This script supports Arch Linux only.")
 

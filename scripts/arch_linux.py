@@ -99,20 +99,36 @@ def run_command(command):
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
 
-def config_db_server():
-    pass
+def get_env_data(env_path, input_key, default):
+
+    # Check if the .env file exists
+    if os.path.exists(env_path):
+        with open(env_path, "r") as file:
+            for line in file:
+                # Check if the line contains the input key
+                if line.startswith(input_key):
+                    # Extract the value after the '=' and remove surrounding quotes
+                    _, env_input = line.strip().split("=", 1)
+                    result = env_input.strip('\'"')
+                    return result
+
+    # Return the default value if the input key is not found
+    return default
+
+def config_db_server(env_path):
+    
     # Install MariaDB database
     run_command("sudo mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql")
 
     # Enable MariaDB service
     run_command("sudo systemctl start mariadb")
 
-    # Start MariaDB service
-    run_command("sudo systemctl status mariadb")
+    # Set the desired DB_User
+    db_user = get_env_data(env_path, "DB_USER", default="root")
 
     # Set the desired password
-    db_password = "Anonymous@#633911"
+    db_password = get_env_data(env_path, "DB_PASSWORD", default="")
 
     # Command to run mariadb-secure-installation
-    command = f"sudo mariadb-admin --user=root password '{db_password}'"
+    command = f"sudo mariadb-admin --user='{db_user}' password '{db_password}'"
     run_command(command)
