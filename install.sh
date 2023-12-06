@@ -88,6 +88,7 @@ auth_github() {
     # Check if user is already authenticated with GitHub
     if gh auth status &>/dev/null; then
         # User is authenticated, proceed to clone_build
+        config_git
         clone_build
     else
         # User is not authenticated, prompt for login
@@ -97,6 +98,7 @@ auth_github() {
             # Attempt GitHub authentication
             if gh auth login; then
                 echo "${color_light_green}${color_bold}${checkmark_symbol} GitHub authentication successful.${color_reset}"
+                config_git
                 clone_build
                 break
             else
@@ -378,9 +380,6 @@ arch_linux() {
 
     # Upgrade and install system packages
     sys_packages
-
-    # Configure Git settings
-    config_git
 
     # Authenticate with GitHub
     auth_github
