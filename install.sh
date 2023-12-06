@@ -126,7 +126,7 @@ config_git() {
   if [ -z "$(git config --global user.name)" ] || [ -z "$(git config --global user.email)" ]; then
     if [ -z "$(git config --global user.name)" ]; then
         # Set Git configuration for name
-        git config --global user.name "$FULL_NAME"
+        git config --global user.name "$FULL_NAME_WQ"
     fi
     if [ -z "$(git config --global user.email)" ]; then
         # Set Git configuration for email
@@ -273,7 +273,28 @@ check_configuration() {
     if [ -z "${!CHECK_VAR}" ]; then
         # If empty, get the name from the environment file (assuming the variable is defined in the file)
         if source_env_file; then
-            eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-Default Name}"
+            if [ "$CHECK_VAR" = "FULL_NAME" ]; then
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-Default Name}"
+                FULL_NAME_WQ=$FULL_NAME
+            else
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-Default Name}"
+            fi
+        else
+            if [ "$CHECK_VAR" = "PROJECT_NAME" ]; then
+                PROJECT_NAME="myProject"
+            fi
+
+            if [ "$CHECK_VAR" = "DB_NAME" ]; then
+                DB_NAME="mydb"
+            fi
+
+            if [ "$CHECK_VAR" = "DB_USER" ]; then
+                DB_USER="root"
+            fi
+        fi
+    else
+        if [ "$CHECK_VAR" = "FULL_NAME" ]; then
+            FULL_NAME_WQ=$(echo "$FULL_NAME" | tr -d '"')
         fi
     fi
 }
@@ -305,12 +326,12 @@ verification() {
     check_configuration "DB_USER" "DB_USER"
     check_configuration "DATABASE_PASSWORD" "DB_PASSWORD"
 
-    echo -n "${color_light_green}${color_bold}Configuration has been successfully established.${color_reset}"
+    echo -n "${color_light_green}${color_bold}${checkmark_symbol} Configuration has been successfully established.${color_reset}"
     echo  # This adds a new line
 # Print the formatted information in a double-line colorful box
 printf "${color_yellow}${color_bold}╔════════════════════════════════════════════════════════╗${color_reset}\n"
 printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "System Info" "${color_grey}${color_bold}$formatted_OS $formatted_DISTRO${color_reset}"
-printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Full Name" "${color_blue}${color_bold}$FULL_NAME${color_reset}"
+printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Full Name" "${color_blue}${color_bold}$FULL_NAME_WQ${color_reset}"
 printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Github Email" "${color_blue}${color_bold}$GITHUB_EMAIL${color_reset}"
 printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Project Name" "${color_dark_green}${color_bold}$PROJECT_NAME${color_reset}"
 printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "DataBase Name" "${color_purple}${color_bold}$DB_NAME${color_reset}"
