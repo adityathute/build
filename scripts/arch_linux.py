@@ -165,7 +165,7 @@ def config_db_server(env_path):
 
         # Execute MariaDB commands using the 'mariadb' command
         for command in mariadb_commands:
-            run_command(f"sudo mariadb -u root -p'{db_password}' -e \"{command}\"")
+            run_command(f"sudo mariadb -u root --password='{db_password}' --batch -e \"{command}\"")
 
     # Restart MariaDB service
     run_command(restart_command)
