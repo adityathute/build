@@ -124,14 +124,12 @@ def config_db_server(env_path):
     data_directory = "/var/lib/mysql"
 
     # Check if MariaDB is already installed
-    if not os.path.exists(data_directory):
-        # MySQL is not installed, so install it
-        install_command = f"sudo mysql_install_db --user=mysql --basedir=/usr --datadir={data_directory}"
-        run_command(install_command)
+    install_command = f"sudo mysql_install_db --user=mysql --basedir=/usr --datadir={data_directory}"
+    run_command(install_command)
 
-        # Start MariaDB service
-        start_command = "sudo systemctl start mariadb"
-        run_command(start_command)
+    # Start MariaDB service
+    start_command = "sudo systemctl start mariadb"
+    run_command(start_command)
 
     # Set the desired DB_User, password, and database name
     db_user = get_env_data(env_path, "DB_USER", default="root")
