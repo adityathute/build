@@ -100,14 +100,15 @@ def run_command(command):
         print(f"Error: {e}")
 
 def config_db_server():
+    pass
     # Install MariaDB database
-    run_command("sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql")
+    # run_command("sudo mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql")
 
     # Enable MariaDB service
-    run_command("sudo systemctl enable mariadb.service")
+    # run_command("sudo systemctl enable mariadb.service")
 
     # Start MariaDB service
-    run_command("sudo systemctl start mariadb.service")
+    # run_command("sudo systemctl start mariadb.service")
 
     # # Connect to MariaDB as root
     # run_command("mysql -u root -e 'FLUSH PRIVILEGES'")
