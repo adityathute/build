@@ -134,7 +134,7 @@ config_git() {
         # Set Git configuration for email
         git config --global user.email "$GITHUB_EMAIL"
     fi
-    echo "${color_light_green}${color_bold}Git configuration set successfully.${color_reset}"
+    echo "${color_light_green}${color_bold}${checkmark_symbol} GitHub configuration successful.${color_reset}"
   fi
 }
 
