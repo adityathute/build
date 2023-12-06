@@ -28,6 +28,7 @@ else
     color_reset=""
 fi
 checkmark_symbol="✓"
+box_width=45
 
 # Function to update specific variables in the environment file
 update_file() {
@@ -160,9 +161,15 @@ configure_password() {
             if [ "$db_password" = "$db_password_verify" ]; then
                 break   # Break out of the loop if passwords match
             else
+                tput cuu1
+                tput el
+                tput cuu1
+                tput el
                 echo "${color_dark_red}${color_bold}Passwords do not match. Please try again.${color_reset}"
             fi
         else
+            tput cuu1
+            tput el
             echo "${color_dark_red}${color_bold}Blank not allowed. Please enter a valid password.${color_reset}"
         fi
     done
@@ -260,6 +267,17 @@ ENV_FILE="build_project/scripts/.env"
 # Initialize ERROR_CODE as false
 ERROR_CODE=false
 
+check_configuration() {
+    local CHECK_VAR=$1  # Get the variable name as an argument
+    local CHECK_VAR_NAME=$2  # Get the variable name as an argument
+    if [ -z "${!CHECK_VAR}" ]; then
+        # If empty, get the name from the environment file (assuming the variable is defined in the file)
+        if source_env_file; then
+            eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-Default Name}"
+        fi
+    fi
+}
+
 # Function to source the environment file
 source_env_file() {
   if [ -f "$ENV_FILE" ]; then
@@ -273,6 +291,36 @@ source_env_file() {
 # Declare global variables
 BUILD="build_project"
 CONFIG=false
+
+verification() {
+    # Prompt the user to press any key before continuing
+    formatted_OS=$(echo "$OS" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
+    if [ ! -z "${DISTRO}" ]; then
+        formatted_DISTRO=$(echo "$DISTRO" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1' | sed 's/^/(/;s/$/)/')
+    fi
+    check_configuration "FULL_NAME" "FULL_USER_NAME"
+    check_configuration "GITHUB_EMAIL" "GIT_EMAIL"
+    check_configuration "PROJECT_NAME" "PROJECT_NAME"
+    check_configuration "DB_NAME" "DB_NAME"
+    check_configuration "DB_USER" "DB_USER"
+    check_configuration "DATABASE_PASSWORD" "DB_PASSWORD"
+
+    echo -n "${color_light_green}${color_bold}Configuration has been successfully established.${color_reset}"
+    echo  # This adds a new line
+# Print the formatted information in a double-line colorful box
+printf "${color_yellow}${color_bold}╔════════════════════════════════════════════════════════╗${color_reset}\n"
+printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "System Info" "${color_grey}${color_bold}$formatted_OS $formatted_DISTRO${color_reset}"
+printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Full Name" "${color_blue}${color_bold}$FULL_NAME${color_reset}"
+printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Github Email" "${color_blue}${color_bold}$GITHUB_EMAIL${color_reset}"
+printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Project Name" "${color_dark_green}${color_bold}$PROJECT_NAME${color_reset}"
+printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "DataBase Name" "${color_purple}${color_bold}$DB_NAME${color_reset}"
+printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "DataBase UserName" "${color_purple}${color_bold}$DB_USER${color_reset}"
+printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "DataBase Password" "${color_grey}${color_bold}$DATABASE_PASSWORD${color_reset}"
+printf "${color_yellow}${color_bold}╚════════════════════════════════════════════════════════╝${color_reset}\n"
+# Add more information as needed
+
+    echo -n "${color_white}${color_bold}Press any key to continue${color_reset}..." && read -n 1 -s && echo -e "\r\033[K${color_white}${color_bold}Continuing with the script${color_reset}..."
+}
 
 # Function to initialize configuration
 initialization() {
@@ -306,8 +354,8 @@ arch_linux() {
     # Initialization - Checks and sets initial configuration
     initialization
 
-    # Prompt the user to press any key before continuing
-    echo -n "Configuration is set successfully. Press any key to continue..." && read -n 1 -s && echo -e "\r\033[KContinuing with the script..."
+    # Verification - Checks and verify set configuration
+    verification
 
     # Upgrade and install system packages
     sys_packages
