@@ -93,11 +93,16 @@ def install_packages(pkg_manager):
 
     print(f"System packages installed successfully.")
 
-def run_command(command):
+def run_command(command, capture_output=False):
     try:
-        subprocess.run(command, check=True, shell=True)
+        if capture_output:
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
+            return result.stdout.strip()
+        else:
+            subprocess.run(command, shell=True, check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
+        print(f"Error executing command: {e}")
+        # You may want to handle the error or raise an exception here
 
 def get_env_data(env_path, input_key, default):
 
@@ -116,30 +121,40 @@ def get_env_data(env_path, input_key, default):
     return default
 
 def config_db_server(env_path):
-
     data_directory = "/var/lib/mysql"
 
-    # Check if MySQL is already installed
+    # Check if MariaDB is already installed
     if not os.path.exists(data_directory):
         # MySQL is not installed, so install it
-        command = f"sudo mysql_install_db --user=mysql --basedir=/usr --datadir={data_directory}"
-        run_command(command)
+        install_command = f"sudo mysql_install_db --user=mysql --basedir=/usr --datadir={data_directory}"
+        run_command(install_command)
 
         # Start MariaDB service
-        run_command("sudo systemctl start mariadb")
+        start_command = "sudo systemctl start mariadb"
+        run_command(start_command)
 
-        # Set the desired DB_User, password, and database name
-        db_user = get_env_data(env_path, "DB_USER", default="root")
-        db_password = get_env_data(env_path, "DB_PASSWORD", default="")
-        db_name = get_env_data(env_path, "DB_NAME", default="")
+    # Set the desired DB_User, password, and database name
+    db_user = get_env_data(env_path, "DB_USER", default="root")
+    db_password = get_env_data(env_path, "DB_PASSWORD", default="")
+    db_name = get_env_data(env_path, "DB_NAME", default="")
 
+    # Check if user and database already exist
+    user_exists_command = f"sudo mariadb -u root -p'{db_password}' -e \"SELECT user FROM mysql.user WHERE user='{db_user}'\""
+    db_exists_command = f"sudo mariadb -u root -p'{db_password}' -e \"SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='{db_name}'\""
+
+    user_exists = run_command(user_exists_command, capture_output=True).strip()
+    db_exists = run_command(db_exists_command, capture_output=True).strip()
+
+    if not user_exists:
         # Command to set root password
-        command = f"sudo mariadb-admin --user='{db_user}' password '{db_password}'"
-        run_command(command)
+        set_password_command = f"sudo mariadb-admin --user='{db_user}' password '{db_password}'"
+        run_command(set_password_command)
 
-        # Restart MariaDB service
-        run_command("sudo systemctl restart mariadb")
+    # Restart MariaDB service
+    restart_command = "sudo systemctl restart mariadb"
+    run_command(restart_command)
 
+    if not db_exists:
         # MariaDB commands
         mariadb_commands = [
             f"GRANT ALL PRIVILEGES ON *.* TO '{db_user}'@'localhost' IDENTIFIED BY '{db_password}' WITH GRANT OPTION;",
@@ -147,13 +162,11 @@ def config_db_server(env_path):
             f"CREATE DATABASE {db_name};",
         ]
 
-        # Execute MariaDB commands using the 'mysql' command
+        # Execute MariaDB commands using the 'mariadb' command
         for command in mariadb_commands:
             run_command(f"sudo mariadb -u root -p'{db_password}' -e \"{command}\"")
 
-        # Restart MariaDB service
-        run_command("sudo systemctl restart mariadb")
+    # Restart MariaDB service
+    run_command(restart_command)
 
-        print(f"Database configuration completed successfully.")
-
-
+    print(f"Database configuration completed successfully.")
