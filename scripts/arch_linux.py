@@ -168,3 +168,86 @@ def config_db_server(env_path):
     run_command(restart_command)
 
     print(f"Database configuration completed successfully.")
+
+def auth_github():
+    try:
+        # Check GitHub authentication status
+        subprocess.run(["gh", "auth", "status"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        # If the above line is successful, it means the user is authenticated
+        # Return True to indicate successful authentication
+        return True
+
+    except subprocess.CalledProcessError:
+        # If the above line raises an error, it means the user is not authenticated
+        # Prompt for login and retry
+        print("You are not authenticated with GitHub. Logging in...")
+
+        while True:
+            try:
+                # Attempt GitHub authentication
+                subprocess.run(["gh", "auth", "login"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                print("GitHub authentication successful.")
+                
+                # If authentication is successful, return True
+                return True
+
+            except subprocess.CalledProcessError:
+                # If authentication fails, prompt user to retry or exit
+                print("GitHub authentication failed.")
+                choice = input("Press Enter to try again, or 'Q' to exit: ")
+
+                if choice.lower() == 'q':
+                    print("Exiting.")
+                    return False  # Return False to indicate authentication failure
+                else:
+                    print("Retrying GitHub authentication...")
+
+def clone_project(env_path):
+    prj_name = get_env_data(env_path, "PROJECT_NAME", default="root")
+    is_authenticated = auth_github()
+
+    if is_authenticated:
+        if prj_name:
+            # Check if the project directory exists
+            project_directory = os.path.join(os.getcwd(), prj_name)
+
+            if not os.path.exists(project_directory):
+                # Clone the GitHub repository if the project directory does not exist
+                clone_command = f"git clone -b Master https://github.com/adityathute/{prj_name}.git {prj_name}"
+                subprocess.run(clone_command, shell=True, check=True)
+                print(f"Project '{prj_name}' cloned successfully.")
+            else:
+                print(f"Project '{prj_name}' is already cloned.")
+
+def virtual_environment(env_path):
+    current_directory = os.getcwd()
+    prj_name = get_env_data(env_path, "PROJECT_NAME", default="root")
+    project_directory = os.path.join(current_directory, prj_name)
+    
+    if not os.path.exists("env"):
+        # Create a virtual environment
+        run_command("python -m venv env")
+    
+    # Activate the virtual environment manually by setting up environment variables
+    activate_script = os.path.join("env", "bin", "activate")
+    activate_cmd = f"source {activate_script} && env"
+    env_output = run_command(activate_cmd, capture_output=True)
+
+    # Extract environment variables from the activation script output
+    env_vars = {line.split("=", 1)[0]: line.split("=", 1)[1] for line in env_output.splitlines()}
+
+    # Set up the environment variables in the current process
+    os.environ.update(env_vars)
+    
+    if not os.path.exists(project_directory):
+        clone_project(env_path)
+    else:
+        os.chdir(project_directory)
+
+        # Print the current working directory
+        current_directory = os.getcwd()
+        print(f"Current Working Directory: {current_directory}")
+
+        # Install dependencies from requirements.txt
+        run_command("pip install -r build/requirements.txt")

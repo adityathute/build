@@ -104,7 +104,7 @@ auth_github() {
             else
                 # GitHub authentication failed
                 echo "${color_dark_red}${color_bold}GitHub authentication failed.${color_reset}"
-                
+
                 # Prompt user to retry or exit
                 read -rp "${color_white}${color_bold}Press any key to try again, or 'Q' to exit: ${color_reset}" choice
 
@@ -144,7 +144,7 @@ sys_packages() {
     sudo pacman -Syu --noconfirm
 
     # Install required packages
-    sudo pacman -S --noconfirm git github-cli python
+    sudo pacman -S --noconfirm git github-cli python python-pip
 }
 
 # Function to configure a new password
@@ -218,7 +218,7 @@ get_input_user() {
             # Update the input value with the formatted value
             input_value="$formatted_value"
         fi
-        
+
         # Check if the variable name is "GITHUB_EMAIL"
         if [ "$var_name" = "GITHUB_EMAIL" ]; then
             # Convert the input value to lowercase
