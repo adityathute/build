@@ -116,19 +116,44 @@ def get_env_data(env_path, input_key, default):
     return default
 
 def config_db_server(env_path):
-    
-    # Install MariaDB database
-    run_command("sudo mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql")
 
-    # Enable MariaDB service
-    run_command("sudo systemctl start mariadb")
+    data_directory = "/var/lib/mysql"
 
-    # Set the desired DB_User
-    db_user = get_env_data(env_path, "DB_USER", default="root")
+    # Check if MySQL is already installed
+    if not os.path.exists(data_directory):
+        # MySQL is not installed, so install it
+        command = f"sudo mysql_install_db --user=mysql --basedir=/usr --datadir={data_directory}"
+        run_command(command)
 
-    # Set the desired password
-    db_password = get_env_data(env_path, "DB_PASSWORD", default="")
+        # Start MariaDB service
+        run_command("sudo systemctl start mariadb")
 
-    # Command to run mariadb-secure-installation
-    command = f"sudo mariadb-admin --user='{db_user}' password '{db_password}'"
-    run_command(command)
+        # Set the desired DB_User, password, and database name
+        db_user = get_env_data(env_path, "DB_USER", default="root")
+        db_password = get_env_data(env_path, "DB_PASSWORD", default="")
+        db_name = get_env_data(env_path, "DB_NAME", default="")
+
+        # Command to set root password
+        command = f"sudo mariadb-admin --user='{db_user}' password '{db_password}'"
+        run_command(command)
+
+        # Restart MariaDB service
+        run_command("sudo systemctl restart mariadb")
+
+        # MariaDB commands
+        mariadb_commands = [
+            f"GRANT ALL PRIVILEGES ON *.* TO '{db_user}'@'localhost' IDENTIFIED BY '{db_password}' WITH GRANT OPTION;",
+            "FLUSH PRIVILEGES;",
+            f"CREATE DATABASE {db_name};",
+        ]
+
+        # Execute MariaDB commands using the 'mysql' command
+        for command in mariadb_commands:
+            run_command(f"sudo mariadb -u root -p'{db_password}' -e \"{command}\"")
+
+        # Restart MariaDB service
+        run_command("sudo systemctl restart mariadb")
+
+        print(f"Database configuration completed successfully.")
+
+
