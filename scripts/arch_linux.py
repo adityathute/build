@@ -109,40 +109,56 @@ def get_env_data(env_path, input_key, default):
     # Return the default value if the input key is not found
     return default
 
-def create_database_and_user(database_name, root_password, username, user_password):
+def create_or_upgrade_user(target_username, user_password):
+    if target_username and target_username != "root":
+        # Set the user password
+        run_command(f"sudo mariadb -e \"ALTER USER '{target_username}'@'localhost' IDENTIFIED BY '{user_password}';\"", check=True, capture_output=True, text=True)
+        print(f"Password for MariaDB user '{target_username}' has been updated.")
+        
+        # Grant root privileges to the user
+        run_command(f"sudo mariadb -e \"GRANT ALL PRIVILEGES ON *.* TO '{target_username}'@'localhost' WITH GRANT OPTION;\"", check=True, capture_output=True, text=True)
+        run_command("sudo mariadb -e 'FLUSH PRIVILEGES;'", check=True, capture_output=True, text=True)
+        print(f"Root privileges have been granted to MariaDB user '{target_username}'.")
+
+def create_or_upgrade_root_user(root_password):
+    # Set the root user password
+    run_command(f"sudo mariadb -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY '{root_password}';\"", check=True, capture_output=True, text=True)
+    print("Password for MariaDB root user has been updated.")
+    
+    # Grant root privileges to the root user
+    run_command(f"sudo mariadb -e \"GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;\"", check=True, capture_output=True, text=True)
+    run_command("sudo mariadb -e 'FLUSH PRIVILEGES;'", check=True, capture_output=True, text=True)
+    print("Root privileges have been granted to MariaDB root user.")
+
+def create_database(target_database):
     # Check if the database exists
-    try:
-        run_command(f"mysql -e 'USE {database_name}' -u root -p{root_password}", capture_output=True)
-        print(f"The database '{database_name}' already exists.")
-    except subprocess.CalledProcessError:
+    if not run_command(f"mysql -e 'USE {target_database}'", capture_output=True).strip():
         # The database does not exist, so create it
-        run_command(f"mysql -e 'CREATE DATABASE {database_name}' -u root -p{root_password}", capture_output=True)
-        print(f"The database '{database_name}' has been created.")
-
-        # Create a user with the specified username and password
-        run_command(f"mysql -e \"CREATE USER '{username}'@'localhost' IDENTIFIED BY '{user_password}'\" -u root -p{root_password}", capture_output=True)
-        print(f"User '{username}' has been created.")
-
-        # Grant necessary privileges to the user on the database
-        run_command(f"mysql -e \"GRANT ALL PRIVILEGES ON {database_name}.* TO '{username}'@'localhost'\" -u root -p{root_password}", capture_output=True)
-        run_command(f"mysql -e 'FLUSH PRIVILEGES' -u root -p{root_password}", capture_output=True)
+        run_command(f"mysql -e 'CREATE DATABASE {target_database}'", capture_output=True)
+        print(f"The database '{target_database}' has been created.")
+    else:
+        print(f"The database '{target_database}' already exists.")
 
 def config_db_server(env_path):
     # Specify the database, username, and root password
     target_database = get_env_data(env_path, "DB_NAME", default="")
-    target_username = get_env_data(env_path, "DB_USER", default="root")
+    target_username = get_env_data(env_path, "DB_USER", default="")
     user_password = get_env_data(env_path, "DB_PASSWORD", default="")
     root_password = user_password
 
     if shutil.which("mariadb"):
-        # Start and enable MariaDB service
-        run_command('sudo systemctl start mariadb.service')
-        run_command('sudo systemctl enable mariadb.service')
+        # Check if MariaDB service is not active
+        if not run_command('sudo systemctl is-active mariadb.service').strip() == "active":
+            # Start and enable MariaDB service if not already running
+            run_command('sudo systemctl start mariadb.service')
+            run_command('sudo systemctl enable mariadb.service')
+        else:
+            print("MariaDB service is already running.")
 
-        # Create the specified database and user if they don't exist
-        create_database_and_user(target_database, root_password, target_username, user_password)
-
-    print(f"Database configuration completed successfully.")
+        create_or_upgrade_user(target_username, user_password)
+        create_or_upgrade_root_user(root_password)
+        create_database(target_database)
+        print(f"Database configuration completed successfully.")
 
 def auth_github():
     try:
