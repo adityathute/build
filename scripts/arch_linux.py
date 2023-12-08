@@ -117,6 +117,7 @@ def start_enable_mariadb_service():
         # Start and enable MariaDB service if not already running
         subprocess.run(['sudo', 'systemctl', 'start', 'mariadb.service'])
         subprocess.run(['sudo', 'systemctl', 'enable', 'mariadb.service'])
+        
         print("MariaDB service is started and enabled.")
     else:
         print("MariaDB service is already running.")
