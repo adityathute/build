@@ -109,61 +109,27 @@ def get_env_data(env_path, input_key, default):
     # Return the default value if the input key is not found
     return default
 
-def create_or_upgrade_root_user(root_password):
-    # MariaDB root user does not exist, create user and set password
-    create_user_command = f"sudo mariadb -u root -p'{root_password}' -e \"CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY 'Anonymous@#633911';\""
-    grant_privileges_command = f"sudo mariadb -u root -p'{root_password}' -e \"GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;\""
-    flush_privileges_command = f"sudo mariadb -u root -p'{root_password}' -e 'FLUSH PRIVILEGES;'"
-
-    try:
-        subprocess.run(create_user_command, shell=True, check=True, text=True)
-        subprocess.run(grant_privileges_command, shell=True, check=True, text=True)
-        subprocess.run(flush_privileges_command, shell=True, check=True, text=True)
-        print("Root privileges have been granted to MariaDB root user.")
-    except subprocess.CalledProcessError as e:
-        print(f"Error executing command: {e}")
-
-def create_database(target_database, root_password):
-    # Check if the database exists
-    database_exists_output = subprocess.run(f"mariadb -u root -p{root_password} -e 'SHOW DATABASES LIKE \"{target_database}\"'", capture_output=True, text=True, shell=True)
-
-    # Check for errors in the output
-    if "ERROR" in database_exists_output.stderr.upper():
-        print("Error in the command. Check MariaDB logs or investigate further.")
-        return
-
-    # Check if the target database exists
-    database_exists = target_database in database_exists_output.stdout.strip().split("\n")
-
-    if not database_exists:
-        # The database does not exist, so create it
-        create_database_command = f"mariadb -u root -p{root_password} -e 'CREATE DATABASE {target_database}'"
-        try:
-            subprocess.run(create_database_command, shell=True, check=True, text=True)
-            print(f"The database '{target_database}' has been created.")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing command: {e}")
+def start_enable_mariadb_service():
+    # Check if MariaDB service is not active
+    status_output = subprocess.run(['sudo', 'systemctl', 'is-active', 'mariadb.service'], stdout=subprocess.PIPE, text=True)
+    
+    if not status_output.stdout.strip() == "active":
+        # Start and enable MariaDB service if not already running
+        subprocess.run(['sudo', 'systemctl', 'start', 'mariadb.service'])
+        subprocess.run(['sudo', 'systemctl', 'enable', 'mariadb.service'])
+        print("MariaDB service is started and enabled.")
     else:
-        print(f"The database '{target_database}' already exists.")
+        print("MariaDB service is already running.")
 
 def config_db_server(env_path):
     # Specify the database, username, and root password
     target_database = get_env_data(env_path, "DB_NAME", default="")
-    user_password = get_env_data(env_path, "DB_PASSWORD", default="")
-    root_password = user_password
+    root_password = get_env_data(env_path, "DB_PASSWORD", default="")
 
     if shutil.which("mariadb"):
         # Check if MariaDB service is not active
-        if not run_command('sudo systemctl is-active mariadb.service').strip() == "active":
-            # Start and enable MariaDB service if not already running
-            run_command('sudo systemctl start mariadb.service')
-            run_command('sudo systemctl enable mariadb.service')
-        else:
-            print("MariaDB service is already running.")
-
-        create_database(target_database, root_password)
-        create_or_upgrade_root_user(root_password)
-
+        start_enable_mariadb_service()
+        
 def auth_github():
     try:
         # Check GitHub authentication status
