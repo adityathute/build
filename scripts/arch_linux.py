@@ -53,21 +53,14 @@ def set_alias(distro, operating_system):
     else:
         print(f"File not found: {alias_file_path}")
 
-# Check package is already installed
-def is_package_installed(package_name, pkg_manager):
-    try:
-        subprocess.run([pkg_manager, "-Q", package_name], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
 # Install essential packages
 def install_packages(pkg_manager):
-    install_pkgs_command = f"sudo {pkg_manager} -S --noconfirm firefox nodejs npm base-devel mariadb"
-    subprocess.run(install_pkgs_command, shell=True)
+    packages = ["firefox", "nodejs", "npm", "base-devel", "mariadb"]
+    install_pkgs_command = ["sudo", pkg_manager, "-Sq", "--needed", "--noconfirm"] + packages
+    subprocess.run(install_pkgs_command)
 
     # Check if 'yay' is installed
-    if not is_package_installed("yay", pkg_manager):
+    if not shutil.which("yay"):
 
         # Check if yay folder exists and remove it
         if os.path.exists("yay"):
@@ -116,59 +109,53 @@ def get_env_data(env_path, input_key, default):
     # Return the default value if the input key is not found
     return default
 
-def config_db_server(env_path):
-    data_directory = "/var/lib/mysql"
-
-    # Check if MariaDB is already installed
-    install_command = f"sudo mysql_install_db --user=mysql --basedir=/usr --datadir={data_directory}"
-    run_command(install_command)
-
-    # Start MariaDB service
-    start_command = "sudo systemctl start mariadb"
-    run_command(start_command)
-
-    # Set the desired DB_User, password, and database name
-    db_user = get_env_data(env_path, "DB_USER", default="root")
-    db_password = get_env_data(env_path, "DB_PASSWORD", default="")
-    db_name = get_env_data(env_path, "DB_NAME", default="")
-
-    # Check if user and database already exist
-    user_exists_command = f"sudo mariadb -u root -p'{db_password}' -e \"SELECT user FROM mysql.user WHERE user='{db_user}'\""
-    db_exists_command = f"sudo mariadb -u root -p'{db_password}' -e \"SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='{db_name}'\""
-
-    user_exists = run_command(user_exists_command, capture_output=True).strip()
-
+def install_mariadb(root_password):
     try:
-        db_exists_output = subprocess.check_output(db_exists_command, shell=True, stderr=subprocess.STDOUT, text=True)
-        db_exists = db_name in db_exists_output.strip()
-    except subprocess.CalledProcessError as e:
-        # Handle errors, if any
-        print(f"Error checking database existence: {e}")
-        db_exists = False
+        # Check if MariaDB is already installed
+        run_command('pacman -Qi mariadb', capture_output=True)
+        print("MariaDB is already installed.")
+    except subprocess.CalledProcessError:
+        # MariaDB is not installed, so install it
+        run_command(f'sudo pacman -S mariadb', capture_output=True)
+        print("MariaDB has been installed.")
 
-    if not user_exists:
-        # Command to set root password
-        set_password_command = f"sudo mariadb-admin --user='{db_user}' password '{db_password}'"
-        run_command(set_password_command)
+        # Start and enable MariaDB service
+        run_command('sudo systemctl start mariadb.service')
+        run_command('sudo systemctl enable mariadb.service')
 
-    # Restart MariaDB service
-    restart_command = "sudo systemctl restart mariadb"
-    run_command(restart_command)
+        # Secure installation (set root password, remove anonymous users, etc.)
+        run_command(f'sudo mysql_secure_installation', input=f"{root_password}\nY\nY\nY\nY\nY\n", text=True)
 
-    if not db_exists:
-        # MariaDB commands
-        mariadb_commands = [
-            f"GRANT ALL PRIVILEGES ON *.* TO '{db_user}'@'localhost' IDENTIFIED BY '{db_password}' WITH GRANT OPTION;",
-            "FLUSH PRIVILEGES;",
-            f"CREATE DATABASE {db_name};",
-        ]
+def create_database_and_user(database_name, root_password, username, user_password):
+    # Check if the database exists
+    try:
+        run_command(f"mysql -e 'USE {database_name}' -u root -p{root_password}", capture_output=True)
+        print(f"The database '{database_name}' already exists.")
+    except subprocess.CalledProcessError:
+        # The database does not exist, so create it
+        run_command(f"mysql -e 'CREATE DATABASE {database_name}' -u root -p{root_password}", capture_output=True)
+        print(f"The database '{database_name}' has been created.")
 
-        # Execute MariaDB commands using the 'mariadb' command
-        for command in mariadb_commands:
-            run_command(f"sudo mariadb -u root --password='{db_password}' --batch -e \"{command}\"")
+        # Create a user with the specified username and password
+        run_command(f"mysql -e \"CREATE USER '{username}'@'localhost' IDENTIFIED BY '{user_password}'\" -u root -p{root_password}", capture_output=True)
+        print(f"User '{username}' has been created.")
 
-    # Restart MariaDB service
-    run_command(restart_command)
+        # Grant necessary privileges to the user on the database
+        run_command(f"mysql -e \"GRANT ALL PRIVILEGES ON {database_name}.* TO '{username}'@'localhost'\" -u root -p{root_password}", capture_output=True)
+        run_command(f"mysql -e 'FLUSH PRIVILEGES' -u root -p{root_password}", capture_output=True)
+
+def config_db_server(env_path):
+    # Specify the database, username, and root password
+    target_database = get_env_data(env_path, "DB_NAME", default="")
+    target_username = get_env_data(env_path, "DB_USER", default="root")
+    user_password = get_env_data(env_path, "DB_PASSWORD", default="")
+    root_password = user_password
+
+    # Install MariaDB if not installed and set the root password
+    install_mariadb(root_password)
+
+    # Create the specified database and user if they don't exist
+    create_database_and_user(target_database, root_password, target_username, user_password)
 
     print(f"Database configuration completed successfully.")
 
