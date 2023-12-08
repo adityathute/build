@@ -213,9 +213,7 @@ def clone_project(env_path):
             else:
                 print(f"warning: {prj_name} is already cloned -- skipping")
 
-def virtual_environment(env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
-    
+def virtual_environment():
     if not os.path.exists("env"):
         # Create a virtual environment
         print(f"creating virtual environment...")
@@ -231,6 +229,32 @@ def virtual_environment(env_path):
 
     # Set up the environment variables in the current process
     os.environ.update(env_vars)
-    
+
+def install_dependencies(env_path):
+
+    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
+
     # Install dependencies from requirements.txt
     run_command(f"pip install -r {prj_name}/build/requirements.txt")
+
+    pkg_json="./package.json"
+    pkg_json_location = f"/{prj_name}/build/package.json"
+
+    # Check if the package.json file exists
+    if not os.path.exists(pkg_json):
+        # If not, copy it from the source location
+        shutil.copy(pkg_json_location, pkg_json)
+        print(f"package.json copied from {pkg_json_location} to {pkg_json}")
+    else:
+        # Read the content of both files
+        with open(pkg_json, 'r') as dest_file, open(pkg_json_location, 'r') as src_file:
+            dest_content = dest_file.read()
+            src_content = src_file.read()
+
+        # Compare content
+        if dest_content != src_content:
+            # If content is different, update the package.json file
+            shutil.copy(pkg_json_location, pkg_json)
+            print(f"package.json updated from {pkg_json_location} to {pkg_json}")
+        else:
+            print(f"package.json already exists and has the same content at {pkg_json}")
