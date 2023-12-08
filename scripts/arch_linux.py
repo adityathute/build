@@ -17,7 +17,7 @@ def set_alias(distro, operating_system):
     bashrc_file_path = os.path.join(os.path.expanduser("~"), ".bashrc")
 
     # Check if the file exists before attempting to open it
-    if os.path.exists(alias_file_path):
+    if os.path.exists(alias_file_path) and os.path.exists(bashrc_file_path):
         # Read the content of alias.txt
         with open(alias_file_path, 'r') as alias_file:
             alias_content = alias_file.read()
@@ -44,14 +44,17 @@ def set_alias(distro, operating_system):
         with open(bashrc_file_path, 'w') as bashrc_file:
             bashrc_file.write(updated_bashrc_content)
 
-        print(f"Aliases added successfully.")
+        print(f"success: aliases updated successfully.")
 
         # Source the updated .bashrc file
         source_command = f"source {bashrc_file_path}"
         # You may want to run this command in a subprocess or shell
         subprocess.run(source_command, shell=True)
     else:
-        print(f"File not found: {alias_file_path}")
+        if not os.path.exists(alias_file_path):
+            print(f"Error: File not found - {alias_file_path}")
+        if not os.path.exists(bashrc_file_path):
+            print(f"Error: File not found - {bashrc_file_path}")
 
 # Install essential packages
 def install_packages(pkg_manager):
@@ -83,8 +86,6 @@ def install_packages(pkg_manager):
 
         # Remove yay folder
         shutil.rmtree("yay")
-
-    print(f"System packages installed successfully.")
 
 def run_command(command, capture_output=False):
     try:
@@ -121,27 +122,27 @@ def start_enable_mariadb_service():
         subprocess.run(['sudo', 'systemctl', 'start', 'mariadb.service'])
         subprocess.run(['sudo', 'systemctl', 'enable', 'mariadb.service'])
         
-        print("MariaDB service is started and enabled.")
+        print("success: mariaDB service is started and enabled.")
     else:
-        print("MariaDB service is already running.")
+        print("warning: mariaDB service is already running.")
 
 def create_database(target_database):
     # Check if the database exists
     try:
         subprocess.run(['sudo', 'mariadb', '-e', f"USE {target_database};"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(f"Database '{target_database}' already exists.")
+        print(f"warning: {target_database}' detected -- skipping ")
     except subprocess.CalledProcessError:
         # If the database doesn't exist, create it
         try:
             subprocess.run(['sudo', 'mariadb', '-e', f"CREATE DATABASE {target_database};"])
-            print(f"Database '{target_database}' created successfully.")
+            print(f"success: '{target_database}' created.")
         except subprocess.CalledProcessError as e:
             print(f"Error creating database: {e}")
 
 def config_db_server(env_path):
     # Specify the database, username, and root password
-    target_database = get_env_data(env_path, "DB_NAME", default="")
-    root_password = get_env_data(env_path, "DB_PASSWORD", default="")
+    target_database = get_env_data(env_path, "DB_NAME", default="myDatabase")
+    root_password = get_env_data(env_path, "DB_PASSWORD", default="root")
 
     if shutil.which("mariadb"):
         # Check if MariaDB service is not active
