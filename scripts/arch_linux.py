@@ -196,7 +196,7 @@ def auth_github():
                     print("Retrying GitHub authentication...")
 
 def clone_project(env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", default="root")
+    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
     is_authenticated = auth_github()
 
     if is_authenticated:
@@ -215,7 +215,7 @@ def clone_project(env_path):
 
 def virtual_environment(env_path):
     current_directory = os.getcwd()
-    prj_name = get_env_data(env_path, "PROJECT_NAME", default="root")
+    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
     project_directory = os.path.join(current_directory, prj_name)
     
     if not os.path.exists("env"):
