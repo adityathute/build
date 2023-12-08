@@ -214,9 +214,7 @@ def clone_project(env_path):
                 print(f"warning: {prj_name} is already cloned -- skipping")
 
 def virtual_environment(env_path):
-    current_directory = os.getcwd()
     prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
-    project_directory = os.path.join(current_directory, prj_name)
     
     if not os.path.exists("env"):
         # Create a virtual environment
@@ -234,13 +232,5 @@ def virtual_environment(env_path):
     # Set up the environment variables in the current process
     os.environ.update(env_vars)
     
-    if not os.path.exists(project_directory):
-        clone_project(env_path)
-    else:
-        os.chdir(project_directory)
-
-        # Print the current working directory
-        current_directory = os.getcwd()
-
-        # Install dependencies from requirements.txt
-        run_command("pip install -r build/requirements.txt")
+    # Install dependencies from requirements.txt
+    run_command(f"pip install -r {prj_name}/build/requirements.txt")
