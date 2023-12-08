@@ -125,6 +125,19 @@ def start_enable_mariadb_service():
     else:
         print("MariaDB service is already running.")
 
+def create_database(target_database):
+    # Check if the database exists
+    try:
+        subprocess.run(['sudo', 'mariadb', '-e', f"USE {target_database};"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(f"Database '{target_database}' already exists.")
+    except subprocess.CalledProcessError:
+        # If the database doesn't exist, create it
+        try:
+            subprocess.run(['sudo', 'mariadb', '-e', f"CREATE DATABASE {target_database};"])
+            print(f"Database '{target_database}' created successfully.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error creating database: {e}")
+
 def config_db_server(env_path):
     # Specify the database, username, and root password
     target_database = get_env_data(env_path, "DB_NAME", default="")
@@ -133,7 +146,8 @@ def config_db_server(env_path):
     if shutil.which("mariadb"):
         # Check if MariaDB service is not active
         start_enable_mariadb_service()
-        
+        create_database(target_database)
+
 def auth_github():
     try:
         # Check GitHub authentication status
