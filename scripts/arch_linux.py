@@ -139,6 +139,17 @@ def create_database(target_database):
         except subprocess.CalledProcessError as e:
             print(f"Error creating database: {e}")
 
+def set_root_password(new_password):
+    try:
+        # Execute the mariadb command to set the root password
+        command = f"sudo mariadb -e \"SET PASSWORD FOR 'root'@'localhost' = PASSWORD('{new_password}')\""
+        subprocess.run(command, shell=True, check=True)
+
+        print("success: root password set successfully!")
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+
 def config_db_server(env_path):
     # Specify the database, username, and root password
     target_database = get_env_data(env_path, "DB_NAME", default="myDatabase")
@@ -148,6 +159,7 @@ def config_db_server(env_path):
         # Check if MariaDB service is not active
         start_enable_mariadb_service()
         create_database(target_database)
+        set_root_password(root_password)
 
 def auth_github():
     try:
