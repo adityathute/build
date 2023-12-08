@@ -230,21 +230,22 @@ def virtual_environment():
     # Set up the environment variables in the current process
     os.environ.update(env_vars)
 
-def install_dependencies(env_path):
+def remove_package_lock():
+    pkg_lock_json="./package-lock.json"
 
-    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
+    # Check if the package-lock.json file exists
+    if os.path.exists(pkg_lock_json):
+        # If it exists, delete the file
+        os.remove(pkg_lock_json)
 
-    # Install dependencies from requirements.txt
-    run_command(f"pip install -r {prj_name}/build/requirements.txt")
-
+def config_npm(prj_name):
     pkg_json="./package.json"
-    pkg_json_location = f"/{prj_name}/build/package.json"
+    pkg_json_location = f"{prj_name}/build/package.json"
 
-    # Check if the package.json file exists
     if not os.path.exists(pkg_json):
         # If not, copy it from the source location
         shutil.copy(pkg_json_location, pkg_json)
-        print(f"package.json copied from {pkg_json_location} to {pkg_json}")
+        remove_package_lock()
     else:
         # Read the content of both files
         with open(pkg_json, 'r') as dest_file, open(pkg_json_location, 'r') as src_file:
@@ -253,8 +254,16 @@ def install_dependencies(env_path):
 
         # Compare content
         if dest_content != src_content:
+            remove_package_lock()
             # If content is different, update the package.json file
             shutil.copy(pkg_json_location, pkg_json)
-            print(f"package.json updated from {pkg_json_location} to {pkg_json}")
-        else:
-            print(f"package.json already exists and has the same content at {pkg_json}")
+
+def install_dependencies(env_path):
+    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
+
+    # Install dependencies from requirements.txt
+    run_command(f"pip install -r {prj_name}/build/requirements.txt")
+
+    # Install npm
+    config_npm(prj_name)
+    run_command("npm install")
