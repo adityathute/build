@@ -244,8 +244,8 @@ def config_npm(prj_name):
 
     if not os.path.exists(pkg_json):
         # If not, copy it from the source location
-        shutil.copy(pkg_json_location, pkg_json)
         remove_package_lock()
+        shutil.copy(pkg_json_location, pkg_json)
     else:
         # Read the content of both files
         with open(pkg_json, 'r') as dest_file, open(pkg_json_location, 'r') as src_file:
