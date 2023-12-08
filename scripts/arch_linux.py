@@ -109,40 +109,60 @@ def get_env_data(env_path, input_key, default):
     # Return the default value if the input key is not found
     return default
 
-def create_or_upgrade_user(target_username, user_password):
-    if target_username and target_username != "root":
-        # Set the user password
-        run_command(f"sudo mariadb -e \"ALTER USER '{target_username}'@'localhost' IDENTIFIED BY '{user_password}';\"", check=True, capture_output=True, text=True)
-        print(f"Password for MariaDB user '{target_username}' has been updated.")
-        
-        # Grant root privileges to the user
-        run_command(f"sudo mariadb -e \"GRANT ALL PRIVILEGES ON *.* TO '{target_username}'@'localhost' WITH GRANT OPTION;\"", check=True, capture_output=True, text=True)
-        run_command("sudo mariadb -e 'FLUSH PRIVILEGES;'", check=True, capture_output=True, text=True)
-        print(f"Root privileges have been granted to MariaDB user '{target_username}'.")
-
 def create_or_upgrade_root_user(root_password):
-    # Set the root user password
-    run_command(f"sudo mariadb -e \"ALTER USER 'root'@'localhost' IDENTIFIED BY '{root_password}';\"", check=True, capture_output=True, text=True)
-    print("Password for MariaDB root user has been updated.")
+    # Check if root user already exists
+    root_exists_output = subprocess.run("sudo mariadb -u root -e 'SELECT 1 FROM mysql.user WHERE User = \"root\"'", capture_output=True, text=True, shell=True)
     
-    # Grant root privileges to the root user
-    run_command(f"sudo mariadb -e \"GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;\"", check=True, capture_output=True, text=True)
-    run_command("sudo mariadb -e 'FLUSH PRIVILEGES;'", check=True, capture_output=True, text=True)
-    print("Root privileges have been granted to MariaDB root user.")
+    # Check for errors in the output
+    if "ERROR" in root_exists_output.stdout.upper():
+        print("Error in the command. Check MariaDB logs or investigate further.")
+        return
+    
+    # Check if root user exists
+    root_exists = "1" in root_exists_output.stdout.strip()
 
-def create_database(target_database):
+    if not root_exists:
+        # MariaDB root user does not exist, create user and set password
+        create_user_command = f"sudo mariadb -u root -p'{root_password}' -e \"CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY 'Anonymous@#633911';\""
+        grant_privileges_command = f"sudo mariadb -u root -p'{root_password}' -e \"GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;\""
+        flush_privileges_command = f"sudo mariadb -u root -p'{root_password}' -e 'FLUSH PRIVILEGES;'"
+
+        try:
+            subprocess.run(create_user_command, shell=True, check=True, text=True)
+            subprocess.run(grant_privileges_command, shell=True, check=True, text=True)
+            subprocess.run(flush_privileges_command, shell=True, check=True, text=True)
+            print("Root privileges have been granted to MariaDB root user.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")
+    else:
+        print("MariaDB root user already exists.")
+
+def create_database(target_database, root_password):
     # Check if the database exists
-    if not run_command(f"mysql -e 'USE {target_database}'", capture_output=True).strip():
+    database_exists_output = subprocess.run(f"mariadb -u root -p{root_password} -e 'SHOW DATABASES LIKE \"{target_database}\"'", capture_output=True, text=True, shell=True)
+
+    # Check for errors in the output
+    if "ERROR" in database_exists_output.stderr.upper():
+        print("Error in the command. Check MariaDB logs or investigate further.")
+        return
+
+    # Check if the target database exists
+    database_exists = target_database in database_exists_output.stdout.strip().split("\n")
+
+    if not database_exists:
         # The database does not exist, so create it
-        run_command(f"mysql -e 'CREATE DATABASE {target_database}'", capture_output=True)
-        print(f"The database '{target_database}' has been created.")
+        create_database_command = f"mariadb -u root -p{root_password} -e 'CREATE DATABASE {target_database}'"
+        try:
+            subprocess.run(create_database_command, shell=True, check=True, text=True)
+            print(f"The database '{target_database}' has been created.")
+        except subprocess.CalledProcessError as e:
+            print(f"Error executing command: {e}")
     else:
         print(f"The database '{target_database}' already exists.")
 
 def config_db_server(env_path):
     # Specify the database, username, and root password
     target_database = get_env_data(env_path, "DB_NAME", default="")
-    target_username = get_env_data(env_path, "DB_USER", default="")
     user_password = get_env_data(env_path, "DB_PASSWORD", default="")
     root_password = user_password
 
@@ -155,10 +175,8 @@ def config_db_server(env_path):
         else:
             print("MariaDB service is already running.")
 
-        create_or_upgrade_user(target_username, user_password)
         create_or_upgrade_root_user(root_password)
-        create_database(target_database)
-        print(f"Database configuration completed successfully.")
+        create_database(target_database, root_password)
 
 def auth_github():
     try:
