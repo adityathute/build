@@ -109,23 +109,6 @@ def get_env_data(env_path, input_key, default):
     # Return the default value if the input key is not found
     return default
 
-def install_mariadb(root_password):
-    try:
-        # Check if MariaDB is already installed
-        run_command('pacman -Qi mariadb', capture_output=True)
-        print("MariaDB is already installed.")
-    except subprocess.CalledProcessError:
-        # MariaDB is not installed, so install it
-        run_command(f'sudo pacman -S mariadb', capture_output=True)
-        print("MariaDB has been installed.")
-
-        # Start and enable MariaDB service
-        run_command('sudo systemctl start mariadb.service')
-        run_command('sudo systemctl enable mariadb.service')
-
-        # Secure installation (set root password, remove anonymous users, etc.)
-        run_command(f'sudo mysql_secure_installation', input=f"{root_password}\nY\nY\nY\nY\nY\n", text=True)
-
 def create_database_and_user(database_name, root_password, username, user_password):
     # Check if the database exists
     try:
@@ -151,11 +134,13 @@ def config_db_server(env_path):
     user_password = get_env_data(env_path, "DB_PASSWORD", default="")
     root_password = user_password
 
-    # Install MariaDB if not installed and set the root password
-    install_mariadb(root_password)
+    if shutil.which("mariadb"):
+        # Start and enable MariaDB service
+        run_command('sudo systemctl start mariadb.service')
+        run_command('sudo systemctl enable mariadb.service')
 
-    # Create the specified database and user if they don't exist
-    create_database_and_user(target_database, root_password, target_username, user_password)
+        # Create the specified database and user if they don't exist
+        create_database_and_user(target_database, root_password, target_username, user_password)
 
     print(f"Database configuration completed successfully.")
 
