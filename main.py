@@ -7,5 +7,5 @@ def arch_linux(env_path):
     set_alias("arch_linux", "linux")
     install_packages("pacman")
     config_db_server(env_path)
-    clone_project(env_path)
-    virtual_environment(env_path)
+    # clone_project(env_path)
+    # virtual_environment(env_path)
