@@ -4,26 +4,18 @@
 if [ -t 1 ] && command -v tput > /dev/null; then
     color_dark_red=$(tput setaf 1)
     color_light_green=$(tput setaf 2)
-    color_yellow=$(tput setaf 3)
     color_blue=$(tput setaf 4)
-    color_purple=$(tput setaf 5)
-    color_dark_green=$(tput setaf 6)
     color_white=$(tput setaf 7)
     color_grey=$(tput setaf 8)
-    color_light_red=$(tput setaf 9)
     color_bold=$(tput bold)
     color_reset=$(tput sgr0)
 else
     # Set variables to empty strings if colors are not supported
     color_dark_red=""
     color_light_green=""
-    color_yellow=""
     color_blue=""
-    color_purple=""
-    color_dark_green=""
     color_white=""
     color_grey=""
-    color_light_red=""
     color_bold=""
     color_reset=""
 fi
@@ -150,12 +142,12 @@ sys_packages() {
 # Function to configure a new password
 configure_password() {
     while true; do
-        read -sp "${color_purple}${color_bold}Enter the Database Password: ${color_reset}" db_password
+        read -sp "${color_blue}${color_bold}Enter the Database Password: ${color_reset}" db_password
         echo    # Add a newline after the password input
 
         # Check if the entered password is not blank
         if [ -n "$db_password" ]; then
-            read -sp "${color_purple}${color_bold}Re-enter the Database Password: ${color_reset}" db_password_verify
+            read -sp "${color_blue}${color_bold}Re-enter the Database Password: ${color_reset}" db_password_verify
             echo    # Add a newline after the verification input
 
             if [ "$db_password" = "$db_password_verify" ]; then
@@ -267,17 +259,40 @@ ENV_FILE="build_project/scripts/.env"
 # Initialize ERROR_CODE as false
 ERROR_CODE=false
 
+hide_password() {
+    password="$DATABASE_PASSWORD"
+
+    # Check the length of the password
+    password_length=${#password}
+
+    # Calculate the number of characters to hide
+    half_length=$(( password_length / 2 ))
+    
+    # Extract the first half of the password
+    first_half="${password:0:$half_length}"
+
+    # Replace the second half with asterisks
+    hidden_password="$first_half$(printf '*%.0s' $(seq $((password_length - half_length))))"
+
+    DB_HIDE_PASSWORD=$hidden_password
+
+}
+
 check_configuration() {
     local CHECK_VAR=$1  # Get the variable name as an argument
     local CHECK_VAR_NAME=$2  # Get the variable name as an argument
+
     if [ -z "${!CHECK_VAR}" ]; then
         # If empty, get the name from the environment file (assuming the variable is defined in the file)
         if source_env_file; then
             if [ "$CHECK_VAR" = "FULL_NAME" ]; then
-                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-Default Name}"
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-No Name}"
                 FULL_NAME_WQ=$FULL_NAME
+            elif [ "$CHECK_VAR" = "DATABASE_PASSWORD" ]; then
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-No Name}"
+                hide_password
             else
-                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-Default Name}"
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-No Name}"
             fi
         else
             if [ "$CHECK_VAR" = "PROJECT_NAME" ]; then
@@ -285,16 +300,15 @@ check_configuration() {
             fi
 
             if [ "$CHECK_VAR" = "DB_NAME" ]; then
-                DB_NAME="mydb"
-            fi
-
-            if [ "$CHECK_VAR" = "DB_USER" ]; then
-                DB_USER="root"
+                DB_NAME="myDatabase"
             fi
         fi
     else
         if [ "$CHECK_VAR" = "FULL_NAME" ]; then
             FULL_NAME_WQ=$(echo "$FULL_NAME" | tr -d '"')
+        fi
+        if [ "$CHECK_VAR" = "DATABASE_PASSWORD" ]; then
+            hide_password
         fi
     fi
 }
@@ -323,21 +337,17 @@ verification() {
     check_configuration "GITHUB_EMAIL" "GIT_EMAIL"
     check_configuration "PROJECT_NAME" "PROJECT_NAME"
     check_configuration "DB_NAME" "DB_NAME"
-    check_configuration "DB_USER" "DB_USER"
     check_configuration "DATABASE_PASSWORD" "DB_PASSWORD"
 
     echo -n "${color_light_green}${color_bold}${checkmark_symbol} Configuration has been successfully established.${color_reset}"
     echo  # This adds a new line
 # Print the formatted information in a double-line colorful box
-printf "${color_yellow}${color_bold}╔════════════════════════════════════════════════════════╗${color_reset}\n"
-printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "System Info" "${color_grey}${color_bold}$formatted_OS $formatted_DISTRO${color_reset}"
-printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Full Name" "${color_blue}${color_bold}$FULL_NAME_WQ${color_reset}"
-printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Github Email" "${color_blue}${color_bold}$GITHUB_EMAIL${color_reset}"
-printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "Project Name" "${color_dark_green}${color_bold}$PROJECT_NAME${color_reset}"
-printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "DataBase Name" "${color_purple}${color_bold}$DB_NAME${color_reset}"
-printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "DataBase UserName" "${color_purple}${color_bold}$DB_USER${color_reset}"
-printf "${color_yellow}${color_bold}║  ${color_reset}${color_white}%-18s : %-47s${color_yellow}${color_bold} ║${color_reset}\n" "DataBase Password" "${color_grey}${color_bold}$DATABASE_PASSWORD${color_reset}"
-printf "${color_yellow}${color_bold}╚════════════════════════════════════════════════════════╝${color_reset}\n"
+printf "${color_grey}%-18s : %-44s\n" "System Info" "${color_white}$formatted_OS $formatted_DISTRO${color_reset}"
+printf "${color_grey}%-18s : %-44s\n" "Full Name" "${color_white}$FULL_NAME_WQ${color_reset}"
+printf "${color_grey}%-18s : %-44s\n" "Github Email" "${color_white}$GITHUB_EMAIL${color_reset}"
+printf "${color_grey}%-18s : %-44s\n" "Project Name" "${color_white}$PROJECT_NAME${color_reset}"
+printf "${color_grey}%-18s : %-44s\n" "DataBase Name" "${color_white}$DB_NAME${color_reset}"
+printf "${color_grey}%-18s : %-44s\n" "DataBase Password" "${color_white}$DB_HIDE_PASSWORD${color_reset}"
 # Add more information as needed
 
     echo -n "${color_white}${color_bold}Press any key to continue${color_reset}..." && read -n 1 -s && echo -e "\r\033[K${color_white}${color_bold}Continuing with the script${color_reset}..."
