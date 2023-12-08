@@ -211,7 +211,7 @@ def clone_project(env_path):
                 print(f"success: {prj_name} cloned successfully!")
 
             else:
-                print(f"warning: {prj_name} is already cloned!")
+                print(f"warning: {prj_name} is already cloned -- skipping")
 
 def virtual_environment(env_path):
     current_directory = os.getcwd()
