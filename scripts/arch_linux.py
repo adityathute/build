@@ -130,12 +130,12 @@ def create_database(target_database):
     # Check if the database exists
     try:
         subprocess.run(['sudo', 'mariadb', '-e', f"USE {target_database};"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        print(f"warning: {target_database}' detected -- skipping ")
+        print(f"warning: {target_database} detected -- skipping ")
     except subprocess.CalledProcessError:
         # If the database doesn't exist, create it
         try:
             subprocess.run(['sudo', 'mariadb', '-e', f"CREATE DATABASE {target_database};"])
-            print(f"success: '{target_database}' created.")
+            print(f"success: {target_database} created.")
         except subprocess.CalledProcessError as e:
             print(f"Error creating database: {e}")
 
@@ -208,9 +208,10 @@ def clone_project(env_path):
                 # Clone the GitHub repository if the project directory does not exist
                 clone_command = f"git clone -b Master https://github.com/adityathute/{prj_name}.git {prj_name}"
                 subprocess.run(clone_command, shell=True, check=True)
-                print(f"Project '{prj_name}' cloned successfully.")
+                print(f"success: {prj_name} cloned successfully!")
+
             else:
-                print(f"Project '{prj_name}' is already cloned.")
+                print(f"warning: {prj_name} is already cloned!")
 
 def virtual_environment(env_path):
     current_directory = os.getcwd()
@@ -219,6 +220,7 @@ def virtual_environment(env_path):
     
     if not os.path.exists("env"):
         # Create a virtual environment
+        print(f"creating virtual environment...")
         run_command("python -m venv env")
     
     # Activate the virtual environment manually by setting up environment variables
@@ -239,7 +241,6 @@ def virtual_environment(env_path):
 
         # Print the current working directory
         current_directory = os.getcwd()
-        print(f"Current Working Directory: {current_directory}")
 
         # Install dependencies from requirements.txt
         run_command("pip install -r build/requirements.txt")
