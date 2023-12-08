@@ -110,6 +110,9 @@ def get_env_data(env_path, input_key, default):
     return default
 
 def start_enable_mariadb_service():
+    # Attempt to initialize the system tables
+    subprocess.run(['sudo', 'mariadb-install-db', '--user=mysql', '--basedir=/usr', '--datadir=/var/lib/mysql'])
+
     # Check if MariaDB service is not active
     status_output = subprocess.run(['sudo', 'systemctl', 'is-active', 'mariadb.service'], stdout=subprocess.PIPE, text=True)
     
