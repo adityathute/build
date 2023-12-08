@@ -161,8 +161,8 @@ def config_db_server(env_path):
         else:
             print("MariaDB service is already running.")
 
-        create_or_upgrade_root_user(root_password)
         create_database(target_database, root_password)
+        create_or_upgrade_root_user(root_password)
 
 def auth_github():
     try:
