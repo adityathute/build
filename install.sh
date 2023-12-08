@@ -143,8 +143,8 @@ sys_packages() {
     # Upgrade all installed packages
     sudo pacman -Syu --noconfirm
 
-    # Install required packages
-    sudo pacman -Sq --noconfirm git github-cli python python-pip
+    # Install required packages if not already up to date
+    sudo pacman -Sq --needed --noconfirm git github-cli python python-pip
 }
 
 # Function to configure a new password
