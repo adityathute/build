@@ -110,32 +110,18 @@ def get_env_data(env_path, input_key, default):
     return default
 
 def create_or_upgrade_root_user(root_password):
-    # Check if root user already exists
-    root_exists_output = subprocess.run("sudo mariadb -u root -e 'SELECT 1 FROM mysql.user WHERE User = \"root\"'", capture_output=True, text=True, shell=True)
-    
-    # Check for errors in the output
-    if "ERROR" in root_exists_output.stdout.upper():
-        print("Error in the command. Check MariaDB logs or investigate further.")
-        return
-    
-    # Check if root user exists
-    root_exists = "1" in root_exists_output.stdout.strip()
+    # MariaDB root user does not exist, create user and set password
+    create_user_command = f"sudo mariadb -u root -p'{root_password}' -e \"CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY 'Anonymous@#633911';\""
+    grant_privileges_command = f"sudo mariadb -u root -p'{root_password}' -e \"GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;\""
+    flush_privileges_command = f"sudo mariadb -u root -p'{root_password}' -e 'FLUSH PRIVILEGES;'"
 
-    if not root_exists:
-        # MariaDB root user does not exist, create user and set password
-        create_user_command = f"sudo mariadb -u root -p'{root_password}' -e \"CREATE USER IF NOT EXISTS 'root'@'localhost' IDENTIFIED BY 'Anonymous@#633911';\""
-        grant_privileges_command = f"sudo mariadb -u root -p'{root_password}' -e \"GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' WITH GRANT OPTION;\""
-        flush_privileges_command = f"sudo mariadb -u root -p'{root_password}' -e 'FLUSH PRIVILEGES;'"
-
-        try:
-            subprocess.run(create_user_command, shell=True, check=True, text=True)
-            subprocess.run(grant_privileges_command, shell=True, check=True, text=True)
-            subprocess.run(flush_privileges_command, shell=True, check=True, text=True)
-            print("Root privileges have been granted to MariaDB root user.")
-        except subprocess.CalledProcessError as e:
-            print(f"Error executing command: {e}")
-    else:
-        print("MariaDB root user already exists.")
+    try:
+        subprocess.run(create_user_command, shell=True, check=True, text=True)
+        subprocess.run(grant_privileges_command, shell=True, check=True, text=True)
+        subprocess.run(flush_privileges_command, shell=True, check=True, text=True)
+        print("Root privileges have been granted to MariaDB root user.")
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing command: {e}")
 
 def create_database(target_database, root_password):
     # Check if the database exists
