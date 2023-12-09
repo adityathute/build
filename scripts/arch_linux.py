@@ -228,7 +228,7 @@ def copy_env_file(src_path, dest_path, additional_content=None):
         content += '\n' + additional_content
 
     secret_key_line = f'SECRET_KEY="{generate_secret_key()}"\n'
-    content += '\n' + secret_key_line
+    content += secret_key_line
 
     with open(dest_path, 'w') as dest_file:
         dest_file.write(content)
