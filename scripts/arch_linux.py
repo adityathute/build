@@ -220,15 +220,22 @@ def generate_secret_key(length=64):
     characters = string.ascii_letters + string.digits + string.punctuation
     return ''.join(secrets.choice(characters) for _ in range(length))
 
-def copy_env_file(src_path, dest_path):
+def copy_env_file(src_path, dest_path, additional_content=None):
     with open(src_path, 'r') as src_file:
         content = src_file.read()
+
+    if additional_content:
+        content += '\n' + additional_content
 
     secret_key_line = f'SECRET_KEY="{generate_secret_key()}"\n'
     content += '\n' + secret_key_line
 
     with open(dest_path, 'w') as dest_file:
         dest_file.write(content)
+
+def read_content_from_path(file_path):
+    with open(file_path, 'r') as file:
+        return file.read()
 
 def create_configuration(env_path):
     prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
@@ -239,15 +246,17 @@ def create_configuration(env_path):
     if os.path.exists(env_path) and os.path.exists(config_path):
         if os.path.exists(new_env_path):
             # If the destination file already exists, overwrite it
-            copy_env_file(env_path, new_env_path)
+            additional_content = read_content_from_path(config_path)
+            copy_env_file(env_path, new_env_path, additional_content)
             print(f"success: configuration updated at {new_env_path} file!")
         else:
-            copy_env_file(env_path, new_env_path)
+            additional_content = read_content_from_path(config_path)
+            copy_env_file(env_path, new_env_path, additional_content)
             print(f"success: configuration created at {new_env_path} file!")
     else:
-        if os.path.exists(env_path):
+        if not os.path.exists(env_path):
             print(f"Error: File not found - {env_path}")
-        if os.path.exists(config_path):
+        if not os.path.exists(config_path):
             print(f"Error: File not found - {config_path}")
 
 def virtual_environment():
