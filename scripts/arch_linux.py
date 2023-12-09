@@ -270,31 +270,29 @@ def create_configuration(env_path):
 
     if project_name:
         project_directory = os.path.join(current_directory, project_name)
-        configure_path = os.path.join(project_directory, "build", "env.txt")
+        config_path = os.path.join(project_directory, "build", "env.txt")
     else:
-        configure_path = os.path.join(current_directory, "myProject", "build", "env.txt")
+        config_path = os.path.join(current_directory, "myProject", "build", "env.txt")
 
     new_env_path = ".env"
 
-    print(f"Config Path: {configure_path}")
+    print(f"Config Path: {config_path}")
 
-    if os.path.exists(env_path) and os.path.exists(configure_path):
+    if os.path.exists(env_path):
         new_env_path = os.path.join(current_directory, new_env_path)
 
         if os.path.exists(new_env_path):
-            if not is_env_file_up_to_date(new_env_path, env_path, configure_path):
-                update_env_file(new_env_path, env_path, configure_path)
+            if not is_env_file_up_to_date(new_env_path, env_path, config_path):
+                update_env_file(new_env_path, env_path, config_path)
                 print(f"success: configuration updated at {new_env_path} file!")
             else:
                 print(".env file is already up to date.")
         else:
-            create_env_file(new_env_path, env_path, configure_path)
+            create_env_file(new_env_path, env_path, config_path)
             print(f"success: configuration created at {new_env_path} file!")
     else:
         if os.path.exists(env_path):
             print(f"Error: File not found - {env_path}")
-        if os.path.exists(configure_path):
-            print(f"Error: File not found - {configure_path}")
 
 def virtual_environment():
     if not os.path.exists("venv"):
@@ -342,9 +340,6 @@ def config_npm(prj_name):
             shutil.copy(pkg_json_location, pkg_json)
 
 def install_dependencies(env_path):
-    
-    create_configuration(env_path)
-
     prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
 
     # Install dependencies from requirements.txt
