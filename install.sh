@@ -66,7 +66,7 @@ clone_build() {
 
         # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
         if [ -f "core.py" ]; then
-            python core.py "$OS" "$DISTRO" "$ENV_FILE"
+            python core.py "$OS" "$DISTRO" "$ENV_FILE" "$BUILD"
         fi
     else
         # Clone the repository into the build directory
@@ -76,7 +76,7 @@ clone_build() {
 
         # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
         if [ -f "core.py" ]; then
-            python core.py "$OS" "$DISTRO" "$ENV_FILE"
+            python core.py "$OS" "$DISTRO" "$ENV_FILE" "$BUILD"
         fi
     fi
 }

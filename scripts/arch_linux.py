@@ -47,7 +47,7 @@ def set_alias(distro, operating_system):
         with open(bashrc_file_path, 'w') as bashrc_file:
             bashrc_file.write(updated_bashrc_content)
 
-        print(f"success: aliases updated successfully.")
+        print(f"success: aliases -- updated")
 
         # Source the updated .bashrc file
         source_command = f"source {bashrc_file_path}"
@@ -248,11 +248,11 @@ def create_configuration(env_path):
             # If the destination file already exists, overwrite it
             additional_content = read_content_from_path(config_path)
             copy_env_file(env_path, new_env_path, additional_content)
-            print(f"success: configuration updated at {new_env_path} file!")
+            print(f"success: configuration -- updated")
         else:
             additional_content = read_content_from_path(config_path)
             copy_env_file(env_path, new_env_path, additional_content)
-            print(f"success: configuration created at {new_env_path} file!")
+            print(f"success: configuration -- created")
     else:
         if not os.path.exists(env_path):
             print(f"Error: File not found - {env_path}")
@@ -329,25 +329,36 @@ def extract_adm_function(alias_file_path):
 
     return adm_function_content
 
-def create_migrations_superuser(distro, operating_system, env_path):
-    # prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
-        
-    # # Get the path to the script's directory
-    # script_directory = os.path.dirname(os.path.abspath(__file__))
+def create_migrations(distro, operating_system, env_path):
+    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
 
-    # # Specify the path to the alias.txt and .bashrc files relative to the script's directory
-    # alias_file_path = os.path.join(script_directory, f"os/{operating_system}/{distro}/alias.txt")
+    # Get the path to the script's directory
+    script_directory = os.path.dirname(os.path.abspath(__file__))
 
-    # # Extract 'adm' function content
-    # adm_function_content = extract_adm_function(alias_file_path)
+    # Specify the path to the alias.txt and .bashrc files relative to the script's directory
+    alias_file_path = os.path.join(script_directory, f"os/{operating_system}/{distro}/alias.txt")
 
-    # # Get the path to the project directory
-    # project_directory = os.path.join(os.getcwd(), prj_name)
+    # Extract 'adm' function content
+    adm_function_content = extract_adm_function(alias_file_path)
 
-    # # Change the current working directory to the project directory
-    # os.chdir(project_directory)
+    # Get the path to the project directory
+    project_directory = os.path.join(os.getcwd(), prj_name)
 
-    # # Run each line from 'adm' function content as a command
-    # for command in adm_function_content:
-    #     run_command(command)
-    pass
+    # Change the current working directory to the project directory
+    os.chdir(project_directory)
+
+    # Run each line from 'adm' function content as a command
+    for command in adm_function_content:
+        run_command(command)
+
+def delete_folder(folder_path):
+    print(folder_path)
+    try:
+        # Use shutil.rmtree to delete the folder and its contents
+        # shutil.rmtree(folder_path)
+        print(f"Folder '{folder_path}' and its contents deleted successfully.")
+    except Exception as e:
+        print(f"Error: {e}")
+
+def clean_build(build_path):
+    delete_folder(build_path)
