@@ -426,11 +426,14 @@ def create_migrations(distro, operating_system, env_path):
 
 # Function to clean up a build directory
 def clean_build(build_path):
-    try:
-        # Use shutil.rmtree to delete the folder and its contents
-        shutil.rmtree(build_path)
-    except Exception as e:
-        print(f"Error: {e}")
+    os.chdir('..')
+
+    if os.path.exists(build_path):
+        try:
+            # Use shutil.rmtree to delete the folder and its contents
+            shutil.rmtree(build_path)
+        except Exception as e:
+            print(f"Error: {e}")
 
 # Function to animate dots for a specified duration
 def animate_dots(duration):
@@ -446,4 +449,4 @@ def summary():
     #         print(f"{category} -- {next(iter(messages))}")  # Print the first element in the set
     
     # Displaying a cleaning animation with dots and a final message
-    print("\ncleaning", end='', flush=True); animate_dots(3); print("\n\033[F\033[KAll Done", end='', flush=True)
+    print("\ncleaning", end='', flush=True); animate_dots(3); print("\n\033[F\033[KAll Done\n", end='', flush=True)
