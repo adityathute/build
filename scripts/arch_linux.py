@@ -233,16 +233,13 @@ def copy_env_file(src_path, dest_path):
 def create_configuration(env_path):
     new_env_path = ".env"
 
-    if os.path.exists(env_path):
-        if os.path.exists(new_env_path):
-            # If the destination file already exists, overwrite it
-            copy_env_file(env_path, new_env_path)
-            print(f"Success: Configuration updated at {new_env_path} file!")
-        else:
-            copy_env_file(env_path, new_env_path)
-            print(f"Success: Configuration created at {new_env_path} file!")
+    if os.path.exists(new_env_path):
+        # If the destination file already exists, overwrite it
+        copy_env_file(env_path, new_env_path)
+        print(f"Success: Configuration updated at {new_env_path} file!")
     else:
-        print(f"Error: File not found - {env_path}")
+        copy_env_file(env_path, new_env_path)
+        print(f"Success: Configuration created at {new_env_path} file!")
 
 def virtual_environment():
     if not os.path.exists("venv"):
