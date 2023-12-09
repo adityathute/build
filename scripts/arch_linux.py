@@ -318,7 +318,10 @@ def create_env_file(new_env_path, env_path, config_path):
 
 def create_configuration(env_path):
     prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
-    config_path = os.path.join(prj_name, "build", "config.txt")
+    if prj_name:
+        config_path = f"{prj_name}/build/config.txt"
+    else:
+        config_path = "myProject/build/config.txt"
     new_env_path = ".env"
 
     if os.path.exists(env_path) and os.path.exists(config_path):
