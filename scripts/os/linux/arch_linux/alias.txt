@@ -32,15 +32,14 @@ function ader {
     adr
 }
 function adm {
-    python manage.py makemigrations account
-    python manage.py migrate account
     python manage.py makemigrations
     python manage.py migrate
 }
 function adms {
-    python manage.py makemigrations account
-    python manage.py migrate account
     python manage.py makemigrations
     python manage.py migrate
+    python manage.py createsuperuser
+}
+function ads {
     python manage.py createsuperuser
 }

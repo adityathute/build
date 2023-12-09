@@ -267,7 +267,7 @@ hide_password() {
 
     # Calculate the number of characters to hide
     half_length=$(( password_length / 2 ))
-    
+
     # Extract the first half of the password
     first_half="${password:0:$half_length}"
 
@@ -306,7 +306,7 @@ check_configuration() {
             fi
 
             if [ "$CHECK_VAR" = "DB_USER" ]; then
-                DB_NAME="root"
+                DB_USER="root"
             fi
         fi
     else

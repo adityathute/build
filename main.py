@@ -11,4 +11,4 @@ def arch_linux(env_path):
     virtual_environment()
     install_dependencies(env_path)
     create_configuration(env_path)
-    create_migrations_superuser()
+    create_migrations_superuser("arch_linux", "linux", env_path)
