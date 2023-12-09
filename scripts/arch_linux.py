@@ -217,82 +217,35 @@ def clone_project(env_path):
                 print(f"warning: {prj_name} is already cloned -- skipping")
 
 def generate_secret_key(length=64):
-    # Define the characters to be used in the secret key
     characters = string.ascii_letters + string.digits + string.punctuation
-
-    # Generate a random string using the defined characters
     return ''.join(secrets.choice(characters) for _ in range(length))
 
-def validate_files_exist(*file_paths):
-    for file_path in file_paths:
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(file_path)
+def copy_env_file(src_path, dest_path):
+    with open(src_path, 'r') as src_file:
+        content = src_file.read()
 
-def is_env_file_up_to_date(new_env_path, env_path, config_path):
-    return filecmp.cmp(new_env_path, env_path) and filecmp.cmp(new_env_path, config_path)
+    secret_key_line = f'SECRET_KEY="{generate_secret_key()}"\n'
+    content += '\n' + secret_key_line
 
-def update_env_file(new_env_path, env_path, config_path):
-    with open(new_env_path, 'w') as new_env_file:
-        with open(env_path, 'r') as env_file:
-            new_env_file.write(env_file.read())
-
-        new_env_file.write('\n')
-
-        with open(config_path, 'r') as config_file:
-            new_env_file.write(config_file.read())
-
-        new_env_file.write(f'SECRET_KEY="{generate_secret_key()}"\n')
-
-    # Add file permission (chmod)
-    os.chmod(new_env_path, 0o600)  # Set permission to read and write only for the owner
-
-def create_env_file(new_env_path, env_path, config_path):
-    with open(new_env_path, 'w') as new_env_file:
-        with open(env_path, 'r') as env_file:
-            new_env_file.write(env_file.read())
-
-        new_env_file.write('\n')
-
-        with open(config_path, 'r') as config_file:
-            new_env_file.write(config_file.read())
-
-        new_env_file.write(f'SECRET_KEY="{generate_secret_key()}"\n')
-
-    # Add file permission (chmod)
-    os.chmod(new_env_path, 0o600)  # Set permission to read and write only for the owner
+    with open(dest_path, 'w') as dest_file:
+        dest_file.write(content)
 
 def create_configuration(env_path):
     current_directory = os.getcwd()
-    print(f"Current Directory: {current_directory}")
-    
-    project_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
-    print(f"Project Name: {project_name}")
-
-    if project_name:
-        project_directory = os.path.join(current_directory, project_name)
-        config_path = os.path.join(project_directory, "build", "env.txt")
-    else:
-        config_path = os.path.join(current_directory, "myProject", "build", "env.txt")
 
     new_env_path = ".env"
-
-    print(f"Config Path: {config_path}")
+    new_env_path = os.path.join(current_directory, new_env_path)
 
     if os.path.exists(env_path):
-        new_env_path = os.path.join(current_directory, new_env_path)
-
         if os.path.exists(new_env_path):
-            if not is_env_file_up_to_date(new_env_path, env_path, config_path):
-                update_env_file(new_env_path, env_path, config_path)
-                print(f"success: configuration updated at {new_env_path} file!")
-            else:
-                print(".env file is already up to date.")
+            # If the destination file already exists, overwrite it
+            copy_env_file(env_path, new_env_path)
+            print(f"Success: Configuration updated at {new_env_path} file!")
         else:
-            create_env_file(new_env_path, env_path, config_path)
-            print(f"success: configuration created at {new_env_path} file!")
+            copy_env_file(env_path, new_env_path)
+            print(f"Success: Configuration created at {new_env_path} file!")
     else:
-        if os.path.exists(env_path):
-            print(f"Error: File not found - {env_path}")
+        print(f"Error: File not found - {env_path}")
 
 def virtual_environment():
     if not os.path.exists("venv"):
