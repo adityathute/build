@@ -278,58 +278,58 @@ def generate_secret_key(length=64):
     # Generate a random string using the defined characters
     return ''.join(secrets.choice(characters) for _ in range(length))
 
+def validate_files_exist(*file_paths):
+    for file_path in file_paths:
+        if not os.path.exists(file_path):
+            raise FileNotFoundError(file_path)
+
+def is_env_file_up_to_date(new_env_path, env_path, config_path):
+    return filecmp.cmp(new_env_path, env_path) and filecmp.cmp(new_env_path, config_path)
+
+def update_env_file(new_env_path, env_path, config_path):
+    with open(new_env_path, 'w') as new_env_file:
+        with open(env_path, 'r') as env_file:
+            new_env_file.write(env_file.read())
+
+        new_env_file.write('\n')
+
+        with open(config_path, 'r') as config_file:
+            new_env_file.write(config_file.read())
+
+        new_env_file.write(f'SECRET_KEY="{generate_secret_key()}"\n')
+
+def create_env_file(new_env_path, env_path, config_path):
+    with open(new_env_path, 'w') as new_env_file:
+        with open(env_path, 'r') as env_file:
+            new_env_file.write(env_file.read())
+
+        new_env_file.write('\n')
+
+        with open(config_path, 'r') as config_file:
+            new_env_file.write(config_file.read())
+
+        new_env_file.write(f'SECRET_KEY="{generate_secret_key()}"\n')
 
 def create_configuration(env_path):
     prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
-    config_path = f"{prj_name}/build/config.txt"
+    config_path = os.path.join(prj_name, "build", "config.txt")
     new_env_path = ".env"
 
-    secret_key = generate_secret_key()
+    try:
+        validate_files_exist(env_path, config_path)
+    except FileNotFoundError as e:
+        print(f"Error: {e}")
+        return
 
-    if os.path.exists(env_path) and os.path.exists(config_path):
-        if os.path.exists(new_env_path):
-            # Check if the content of new_env_path is different from env_path or config_path
-            if not filecmp.cmp(new_env_path, env_path) or not filecmp.cmp(new_env_path, config_path):
-                with open(new_env_path, 'w') as new_env_file:
-                    # Read and update content from env_path
-                    with open(env_path, 'r') as env_file:
-                        new_env_file.write(env_file.read())
-
-                    # Add a newline to separate the content from env_path and config_path
-                    new_env_file.write('\n')
-
-                    # Read and update content from config_path
-                    with open(config_path, 'r') as config_file:
-                        new_env_file.write(config_file.read())
-
-                    # Add the generated secret key
-                    new_env_file.write(f'SECRET_KEY="{secret_key}"\n')
-
-                print(f"Success: Configuration updated at {new_env_path} file!")
-            else:
-                print(f".env file is already up to date.")
+    if os.path.exists(new_env_path):
+        if not is_env_file_up_to_date(new_env_path, env_path, config_path):
+            update_env_file(new_env_path, env_path, config_path)
+            print(f"success: configuration updated at {new_env_path} file!")
         else:
-            with open(new_env_path, 'w') as new_env_file:
-                # Read and copy content from env_path
-                with open(env_path, 'r') as env_file:
-                    new_env_file.write(env_file.read())
-
-                # Add a newline to separate the content from env_path and config_path
-                new_env_file.write('\n')
-
-                # Read and copy content from config_path
-                with open(config_path, 'r') as config_file:
-                    new_env_file.write(config_file.read())
-
-                # Add the generated secret key
-                new_env_file.write(f'SECRET_KEY="{secret_key}"\n')
-
-            print(f"Success: Configuration created at {new_env_path} file!")
+            print(".env file is already up to date.")
     else:
-        if not os.path.exists(env_path):
-            print(f"Error: File not found - {env_path}")
-        if not os.path.exists(config_path):
-            print(f"Error: File not found - {config_path}")
+        create_env_file(new_env_path, env_path, config_path)
+        print(f"success: configuration created at {new_env_path} file!")
 
 def extract_adm_function(alias_file_path):
     adm_function_found = False
@@ -347,17 +347,6 @@ def extract_adm_function(alias_file_path):
     return adm_function_content
 
 def create_migrations_superuser(distro, operating_system, env_path):
-    # Activate the virtual environment manually by setting up environment variables
-    activate_script = os.path.join("env", "bin", "activate")
-    activate_cmd = f"source {activate_script} && env"
-    env_output = run_command(activate_cmd, capture_output=True)
-
-    # Extract environment variables from the activation script output
-    env_vars = {line.split("=", 1)[0]: line.split("=", 1)[1] for line in env_output.splitlines()}
-
-    # Set up the environment variables in the current process
-    os.environ.update(env_vars)
-
     prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
         
     # Get the path to the script's directory
