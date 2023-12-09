@@ -263,14 +263,18 @@ def create_env_file(new_env_path, env_path, config_path):
 
 def create_configuration(env_path):
     current_directory = os.getcwd()
-
+    print(f"Current Directory: {current_directory}")
+    
     project_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
+    print(f"Project Name: {project_name}")
     if project_name:
-        config_path = os.path.join(current_directory, project_name, "build", "config.txt")
+        config_path = os.path.join(current_directory, project_name, "build", "env.txt")
     else:
-        config_path = os.path.join(current_directory, "myProject", "build", "config.txt")
+        config_path = os.path.join(current_directory, "myProject", "build", "env.txt")
     new_env_path = ".env"
 
+    print(f"Config Path: {config_path}")
+    
     if os.path.exists(env_path) and os.path.exists(config_path):
         new_env_path = os.path.join(current_directory, new_env_path)
 
