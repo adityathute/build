@@ -442,11 +442,12 @@ def animate_dots(duration):
         time.sleep(1)
 
 # Function to provide a summary
-def summary():
+def summary(env_path):
     # print("\nSummary:-")
     # for category, messages in msg_dict.items():
     #    if messages:  # Check if the set is not empty
     #         print(f"{category} -- {next(iter(messages))}")  # Print the first element in the set
-    
+    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
+    os.chdir(prj_name)
     # Displaying a cleaning animation with dots and a final message
     print("\ncleaning", end='', flush=True); animate_dots(3); print("\n\033[F\033[KAll Done\n", end='', flush=True)
