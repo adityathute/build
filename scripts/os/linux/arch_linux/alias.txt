@@ -1,12 +1,12 @@
 
 function ade() {
     cd ..
-    source env/bin/activate
+    source venv/bin/activate
     cd myProject
 }
 function adce() {
     cd ..
-    python -m venv env
+    python -m venv venv
 }
 function aded() {
     deactivate
