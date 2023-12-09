@@ -302,6 +302,10 @@ check_configuration() {
             if [ "$CHECK_VAR" = "DB_NAME" ]; then
                 DB_NAME="myDatabase"
             fi
+
+            if [ "$CHECK_VAR" = "DB_USER" ]; then
+                DB_NAME="root"
+            fi
         fi
     else
         if [ "$CHECK_VAR" = "FULL_NAME" ]; then
@@ -337,6 +341,7 @@ verification() {
     check_configuration "GITHUB_EMAIL" "GIT_EMAIL"
     check_configuration "PROJECT_NAME" "PROJECT_NAME"
     check_configuration "DB_NAME" "DB_NAME"
+    check_configuration "DB_USER" "DB_USER"
     check_configuration "DATABASE_PASSWORD" "DB_PASSWORD"
 
     echo -n "${color_light_green}${color_bold}${checkmark_symbol} Configuration has been successfully established.${color_reset}"
@@ -347,6 +352,7 @@ printf "${color_grey}%-18s : %-44s\n" "Full Name" "${color_white}$FULL_NAME_WQ${
 printf "${color_grey}%-18s : %-44s\n" "Github Email" "${color_white}$GITHUB_EMAIL${color_reset}"
 printf "${color_grey}%-18s : %-44s\n" "Project Name" "${color_white}$PROJECT_NAME${color_reset}"
 printf "${color_grey}%-18s : %-44s\n" "DataBase Name" "${color_white}$DB_NAME${color_reset}"
+printf "${color_grey}%-18s : %-44s\n" "DataBase User" "${color_white}$DB_USER${color_reset}"
 printf "${color_grey}%-18s : %-44s\n" "DataBase Password" "${color_white}$DB_HIDE_PASSWORD${color_reset}"
 # Add more information as needed
 
