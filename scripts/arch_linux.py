@@ -342,6 +342,9 @@ def config_npm(prj_name):
             shutil.copy(pkg_json_location, pkg_json)
 
 def install_dependencies(env_path):
+    
+    create_configuration(env_path)
+
     prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
 
     # Install dependencies from requirements.txt
