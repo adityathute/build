@@ -3,6 +3,9 @@
 import os
 import subprocess
 import shutil
+import filecmp
+import secrets
+import string
 
 # Implement alias setting based on distro and OS.
 def set_alias(distro, operating_system):
@@ -267,3 +270,76 @@ def install_dependencies(env_path):
     # Install npm
     config_npm(prj_name)
     run_command("npm install")
+
+def generate_secret_key(length=64):
+    # Define the characters to be used in the secret key
+    characters = string.ascii_letters + string.digits + string.punctuation
+
+    # Generate a random string using the defined characters
+    return ''.join(secrets.choice(characters) for _ in range(length))
+
+
+def create_configuration(env_path):
+    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
+    config_path = f"{prj_name}/build/config.txt"
+    new_env_path = ".env"
+
+    secret_key = generate_secret_key()
+
+    if os.path.exists(env_path) and os.path.exists(config_path):
+        if os.path.exists(new_env_path):
+            # Check if the content of new_env_path is different from env_path or config_path
+            if not filecmp.cmp(new_env_path, env_path) or not filecmp.cmp(new_env_path, config_path):
+                with open(new_env_path, 'w') as new_env_file:
+                    # Read and update content from env_path
+                    with open(env_path, 'r') as env_file:
+                        new_env_file.write(env_file.read())
+
+                    # Add a newline to separate the content from env_path and config_path
+                    new_env_file.write('\n')
+
+                    # Read and update content from config_path
+                    with open(config_path, 'r') as config_file:
+                        new_env_file.write(config_file.read())
+
+                    # Add the generated secret key
+                    new_env_file.write(f'SECRET_KEY="{secret_key}"\n')
+
+                print(f"Success: Configuration updated at {new_env_path} file!")
+            else:
+                print(f".env file is already up to date.")
+        else:
+            with open(new_env_path, 'w') as new_env_file:
+                # Read and copy content from env_path
+                with open(env_path, 'r') as env_file:
+                    new_env_file.write(env_file.read())
+
+                # Add a newline to separate the content from env_path and config_path
+                new_env_file.write('\n')
+
+                # Read and copy content from config_path
+                with open(config_path, 'r') as config_file:
+                    new_env_file.write(config_file.read())
+
+                # Add the generated secret key
+                new_env_file.write(f'SECRET_KEY="{secret_key}"\n')
+
+            print(f"Success: Configuration created at {new_env_path} file!")
+    else:
+        if not os.path.exists(env_path):
+            print(f"Error: File not found - {env_path}")
+        if not os.path.exists(config_path):
+            print(f"Error: File not found - {config_path}")
+
+def create_migrations_superuser():
+    # commands = [
+    #     "python manage.py makemigrations account",
+    #     "python manage.py migrate account",
+    #     "python manage.py makemigrations",
+    #     "python manage.py migrate",
+    #     "python manage.py createsuperuser"
+    # ]
+
+    # for command in commands:
+    #     run_command(command)
+    pass
