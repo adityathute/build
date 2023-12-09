@@ -321,24 +321,24 @@ def create_configuration(env_path):
     config_path = os.path.join(prj_name, "build", "config.txt")
     new_env_path = ".env"
 
-    try:
-        validate_files_exist(env_path, config_path)
-    except FileNotFoundError as e:
-        print(f"Error: {e}")
-        return
+    if os.path.exists(env_path) and os.path.exists(config_path):
+        current_directory = os.getcwd()
+        new_env_path = os.path.join(current_directory, new_env_path)
 
-    current_directory = os.getcwd()
-    new_env_path = os.path.join(current_directory, new_env_path)
-
-    if os.path.exists(new_env_path):
-        if not is_env_file_up_to_date(new_env_path, env_path, config_path):
-            update_env_file(new_env_path, env_path, config_path)
-            print(f"Success: Configuration updated at {new_env_path} file!")
+        if os.path.exists(new_env_path):
+            if not is_env_file_up_to_date(new_env_path, env_path, config_path):
+                update_env_file(new_env_path, env_path, config_path)
+                print(f"success: configuration updated at {new_env_path} file!")
+            else:
+                print(".env file is already up to date.")
         else:
-            print(".env file is already up to date.")
+            create_env_file(new_env_path, env_path, config_path)
+            print(f"success: configuration created at {new_env_path} file!")
     else:
-        create_env_file(new_env_path, env_path, config_path)
-        print(f"Success: Configuration created at {new_env_path} file!")
+        if os.path.exists(env_path):
+            print(f"Error: File not found - {env_path}")
+        if os.path.exists(config_path):
+            print(f"Error: File not found - {config_path}")
 
 def extract_adm_function(alias_file_path):
     adm_function_found = False
