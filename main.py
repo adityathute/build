@@ -23,4 +23,4 @@ def arch_linux(env_path, build_path):
     clean_build(build_path)
 
     # Final step: Display a summary of the actions performed
-    summary(env_path)
+    summary()
