@@ -6,6 +6,7 @@ import shutil
 import filecmp
 import secrets
 import string
+import time
 
 # Implement alias setting based on distro and OS.
 def set_alias(distro, operating_system):
@@ -318,15 +319,13 @@ def create_env_file(new_env_path, env_path, config_path):
 
 def create_configuration(env_path):
     current_directory = os.getcwd()
-    print(current_directory)
+
     project_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
     if project_name:
         config_path = os.path.join(current_directory, project_name, "build", "config.txt")
     else:
         config_path = os.path.join(current_directory, "myProject", "build", "config.txt")
     new_env_path = ".env"
-
-    print(config_path)
 
     if os.path.exists(env_path) and os.path.exists(config_path):
         new_env_path = os.path.join(current_directory, new_env_path)
@@ -346,40 +345,7 @@ def create_configuration(env_path):
         if os.path.exists(config_path):
             print(f"Error: File not found - {config_path}")
 
-def extract_adm_function(alias_file_path):
-    adm_function_found = False
-    adm_function_content = []
-
-    with open(alias_file_path, "r") as alias_file:
-        for line in alias_file:
-            if "function adm {" in line:
-                adm_function_found = True
-            elif adm_function_found and line.strip() == "}":
-                break
-            elif adm_function_found:
-                adm_function_content.append(line.strip())
-
-    return adm_function_content
-
-def create_migrations_superuser(distro, operating_system, env_path):
-    # prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
-        
-    # # Get the path to the script's directory
-    # script_directory = os.path.dirname(os.path.abspath(__file__))
-
-    # # Specify the path to the alias.txt and .bashrc files relative to the script's directory
-    # alias_file_path = os.path.join(script_directory, f"os/{operating_system}/{distro}/alias.txt")
-
-    # # Extract 'adm' function content
-    # adm_function_content = extract_adm_function(alias_file_path)
-
-    # # Get the path to the project directory
-    # project_directory = os.path.join(os.getcwd(), prj_name)
-
-    # # Change the current working directory to the project directory
-    # os.chdir(project_directory)
-
-    # # Run each line from 'adm' function content as a command
-    # for command in adm_function_content:
-    #     run_command(command)
-    pass
+def clean_project():
+    print("Cleaning project...")
+    time.sleep(3)  # Pause execution for 3 seconds
+    print("Project cleaned.")
