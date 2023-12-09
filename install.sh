@@ -5,6 +5,7 @@ ENV_FILE="build_project/scripts/.env"
 ERROR_CODE=false
 BUILD="build_project"
 CONFIG=false
+checkmark_symbol="✓"
 
 # Check if the terminal supports colors
 if [ -t 1 ] && command -v tput > /dev/null; then
@@ -25,8 +26,6 @@ else
     color_bold=""
     color_reset=""
 fi
-checkmark_symbol="✓"
-box_width=45
 
 # Function to update specific variables in the environment file
 update_file() {
@@ -260,13 +259,15 @@ check_input_file() {
     fi
 }
 
+# Function to hide a password by replacing its second half with asterisks
 hide_password() {
+    # Assign the value of the DATABASE_PASSWORD environment variable to the 'password' variable
     password="$DATABASE_PASSWORD"
 
     # Check the length of the password
     password_length=${#password}
 
-    # Calculate the number of characters to hide
+    # Calculate the number of characters to hide (half of the password)
     half_length=$(( password_length / 2 ))
 
     # Extract the first half of the password
@@ -274,18 +275,20 @@ hide_password() {
 
     # Replace the second half with asterisks
     hidden_password="$first_half$(printf '*%.0s' $(seq $((password_length - half_length))))"
-
+    # Assign the hidden password to the DB_HIDE_PASSWORD environment variable
     DB_HIDE_PASSWORD=$hidden_password
-
 }
 
+# Function to check and set the value of a configuration variable
 check_configuration() {
     local CHECK_VAR=$1  # Get the variable name as an argument
     local CHECK_VAR_NAME=$2  # Get the variable name as an argument
 
+    # Check if the variable is empty
     if [ -z "${!CHECK_VAR}" ]; then
         # If empty, get the name from the environment file (assuming the variable is defined in the file)
         if source_env_file; then
+            # Set the variable based on its name and handle special cases
             if [ "$CHECK_VAR" = "FULL_NAME" ]; then
                 eval "$CHECK_VAR=\${$CHECK_VAR_NAME}"
                 FULL_NAME_WQ=$FULL_NAME
@@ -298,6 +301,7 @@ check_configuration() {
                 eval "$CHECK_VAR=\${$CHECK_VAR_NAME}"
             fi
         else
+            # If the environment file is not sourced, set default values based on variable name
             if [ "$CHECK_VAR" = "PROJECT_NAME" ]; then
                 PROJECT_NAME="myProject"
             fi
@@ -311,6 +315,7 @@ check_configuration() {
             fi
         fi
     else
+        # If the variable is not empty, handle special cases
         if [ "$CHECK_VAR" = "FULL_NAME" ]; then
             FULL_NAME_WQ=$(echo "$FULL_NAME" | tr -d '"')
         fi
@@ -330,12 +335,17 @@ source_env_file() {
   fi
 }
 
+# Function to verify and display configuration information
 verification() {
     # Prompt the user to press any key before continuing
     formatted_OS=$(echo "$OS" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1')
+    
+    # Format and display the distribution information if available
     if [ ! -z "${DISTRO}" ]; then
         formatted_DISTRO=$(echo "$DISTRO" | awk '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) tolower(substr($i,2))}1' | sed 's/^/(/;s/$/)/')
     fi
+
+    # Check and set various configuration variables
     check_configuration "FULL_NAME" "FULL_USER_NAME"
     check_configuration "GITHUB_EMAIL" "GIT_EMAIL"
     check_configuration "PROJECT_NAME" "PROJECT_NAME"
@@ -343,18 +353,21 @@ verification() {
     check_configuration "DB_USER" "DB_USER"
     check_configuration "DATABASE_PASSWORD" "DB_PASSWORD"
 
+    # Print a success message
     echo -n "${color_light_green}${color_bold}${checkmark_symbol} Configuration has been successfully established.${color_reset}"
     echo  # This adds a new line
-# Print the formatted information in a double-line colorful box
-printf "${color_grey}%-18s : %-44s\n" "System Info" "${color_white}$formatted_OS $formatted_DISTRO${color_reset}"
-printf "${color_grey}%-18s : %-44s\n" "Full Name" "${color_white}$FULL_NAME_WQ${color_reset}"
-printf "${color_grey}%-18s : %-44s\n" "Github Email" "${color_white}$GITHUB_EMAIL${color_reset}"
-printf "${color_grey}%-18s : %-44s\n" "Project Name" "${color_white}$PROJECT_NAME${color_reset}"
-printf "${color_grey}%-18s : %-44s\n" "DataBase Name" "${color_white}$DB_NAME${color_reset}"
-printf "${color_grey}%-18s : %-44s\n" "DataBase User" "${color_white}$DB_USER${color_reset}"
-printf "${color_grey}%-18s : %-44s\n" "DataBase Password" "${color_white}$DB_HIDE_PASSWORD${color_reset}"
-# Add more information as needed
 
+    # Print the formatted information in a double-line colorful box
+    printf "${color_grey}%-18s : %-44s\n" "System Info" "${color_white}$formatted_OS $formatted_DISTRO${color_reset}"
+    printf "${color_grey}%-18s : %-44s\n" "Full Name" "${color_white}$FULL_NAME_WQ${color_reset}"
+    printf "${color_grey}%-18s : %-44s\n" "Github Email" "${color_white}$GITHUB_EMAIL${color_reset}"
+    printf "${color_grey}%-18s : %-44s\n" "Project Name" "${color_white}$PROJECT_NAME${color_reset}"
+    printf "${color_grey}%-18s : %-44s\n" "DataBase Name" "${color_white}$DB_NAME${color_reset}"
+    printf "${color_grey}%-18s : %-44s\n" "DataBase User" "${color_white}$DB_USER${color_reset}"
+    printf "${color_grey}%-18s : %-44s\n" "DataBase Password" "${color_white}$DB_HIDE_PASSWORD${color_reset}"
+    # Add more information as needed
+
+    # Prompt the user to press any key before continuing
     echo -n "${color_white}${color_bold}Press any key to continue${color_reset}..." && read -n 1 -s && echo -e "\r\033[K${color_white}${color_bold}Continuing with the script${color_reset}..."
 }
 
