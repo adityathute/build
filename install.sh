@@ -142,12 +142,12 @@ sys_packages() {
 # Function to configure a new password
 configure_password() {
     while true; do
-        read -sp "${color_blue}${color_bold}Enter the Database Password: ${color_reset}" db_password
+        read -sp "${color_blue}${color_bold}Generate Database Password: ${color_reset}" db_password
         echo    # Add a newline after the password input
 
         # Check if the entered password is not blank
         if [ -n "$db_password" ]; then
-            read -sp "${color_blue}${color_bold}Re-enter the Database Password: ${color_reset}" db_password_verify
+            read -sp "${color_blue}${color_bold}Confirm Password: ${color_reset}" db_password_verify
             echo    # Add a newline after the verification input
 
             if [ "$db_password" = "$db_password_verify" ]; then
