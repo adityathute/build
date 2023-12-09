@@ -317,15 +317,18 @@ def create_env_file(new_env_path, env_path, config_path):
     os.chmod(new_env_path, 0o600)  # Set permission to read and write only for the owner
 
 def create_configuration(env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
-    if prj_name:
-        config_path = f"{prj_name}/build/config.txt"
+    current_directory = os.getcwd()
+    print(current_directory)
+    project_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
+    if project_name:
+        config_path = os.path.join(current_directory, project_name, "build", "config.txt")
     else:
-        config_path = "myProject/build/config.txt"
+        config_path = os.path.join(current_directory, "myProject", "build", "config.txt")
     new_env_path = ".env"
 
+    print(config_path)
+
     if os.path.exists(env_path) and os.path.exists(config_path):
-        current_directory = os.getcwd()
         new_env_path = os.path.join(current_directory, new_env_path)
 
         if os.path.exists(new_env_path):
