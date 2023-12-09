@@ -286,13 +286,15 @@ check_configuration() {
         # If empty, get the name from the environment file (assuming the variable is defined in the file)
         if source_env_file; then
             if [ "$CHECK_VAR" = "FULL_NAME" ]; then
-                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-No Name}"
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME}"
                 FULL_NAME_WQ=$FULL_NAME
             elif [ "$CHECK_VAR" = "DATABASE_PASSWORD" ]; then
-                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-No Name}"
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME}"
                 hide_password
+            elif [ "$CHECK_VAR" = "DB_USER" ]; then
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:- root}"
             else
-                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-No Name}"
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME}"
             fi
         else
             if [ "$CHECK_VAR" = "PROJECT_NAME" ]; then
