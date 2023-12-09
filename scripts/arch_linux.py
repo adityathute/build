@@ -347,6 +347,17 @@ def extract_adm_function(alias_file_path):
     return adm_function_content
 
 def create_migrations_superuser(distro, operating_system, env_path):
+    # Activate the virtual environment manually by setting up environment variables
+    activate_script = os.path.join("env", "bin", "activate")
+    activate_cmd = f"source {activate_script} && env"
+    env_output = run_command(activate_cmd, capture_output=True)
+
+    # Extract environment variables from the activation script output
+    env_vars = {line.split("=", 1)[0]: line.split("=", 1)[1] for line in env_output.splitlines()}
+
+    # Set up the environment variables in the current process
+    os.environ.update(env_vars)
+
     prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
         
     # Get the path to the script's directory
