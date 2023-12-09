@@ -356,23 +356,24 @@ def extract_adm_function(alias_file_path):
     return adm_function_content
 
 def create_migrations_superuser(distro, operating_system, env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
+    # prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
         
-    # Get the path to the script's directory
-    script_directory = os.path.dirname(os.path.abspath(__file__))
+    # # Get the path to the script's directory
+    # script_directory = os.path.dirname(os.path.abspath(__file__))
 
-    # Specify the path to the alias.txt and .bashrc files relative to the script's directory
-    alias_file_path = os.path.join(script_directory, f"os/{operating_system}/{distro}/alias.txt")
+    # # Specify the path to the alias.txt and .bashrc files relative to the script's directory
+    # alias_file_path = os.path.join(script_directory, f"os/{operating_system}/{distro}/alias.txt")
 
-    # Extract 'adm' function content
-    adm_function_content = extract_adm_function(alias_file_path)
+    # # Extract 'adm' function content
+    # adm_function_content = extract_adm_function(alias_file_path)
 
-    # Get the path to the project directory
-    project_directory = os.path.join(os.getcwd(), prj_name)
+    # # Get the path to the project directory
+    # project_directory = os.path.join(os.getcwd(), prj_name)
 
-    # Change the current working directory to the project directory
-    os.chdir(project_directory)
+    # # Change the current working directory to the project directory
+    # os.chdir(project_directory)
 
-    # Run each line from 'adm' function content as a command
-    for command in adm_function_content:
-        run_command(command)
+    # # Run each line from 'adm' function content as a command
+    # for command in adm_function_content:
+    #     run_command(command)
+    pass
