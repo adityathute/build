@@ -292,7 +292,7 @@ check_configuration() {
                 eval "$CHECK_VAR=\${$CHECK_VAR_NAME}"
                 hide_password
             elif [ "$CHECK_VAR" = "DB_USER" ]; then
-                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:- root}"
+                eval "$CHECK_VAR=\${$CHECK_VAR_NAME:-root}"
             else
                 eval "$CHECK_VAR=\${$CHECK_VAR_NAME}"
             fi
