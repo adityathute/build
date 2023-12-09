@@ -155,8 +155,8 @@ def set_root_password(new_password):
 
 def config_db_server(env_path):
     # Specify the database, username, and root password
-    target_database = get_env_data(env_path, "DB_NAME", default="myDatabase")
-    root_password = get_env_data(env_path, "DB_PASSWORD", default="root")
+    target_database = get_env_data(env_path, "DB_NAME", "myDatabase")
+    root_password = get_env_data(env_path, "DB_PASSWORD", "root")
 
     if shutil.which("mariadb"):
         # Check if MariaDB service is not active
@@ -199,7 +199,7 @@ def auth_github():
                     print("Retrying GitHub authentication...")
 
 def clone_project(env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
+    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
     is_authenticated = auth_github()
 
     if is_authenticated:
@@ -262,7 +262,7 @@ def config_npm(prj_name):
             shutil.copy(pkg_json_location, pkg_json)
 
 def install_dependencies(env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
+    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
 
     # Install dependencies from requirements.txt
     run_command(f"pip install -r {prj_name}/build/requirements.txt")
@@ -280,7 +280,7 @@ def generate_secret_key(length=64):
 
 
 def create_configuration(env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
+    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
     config_path = f"{prj_name}/build/config.txt"
     new_env_path = ".env"
 
@@ -347,7 +347,7 @@ def extract_adm_function(alias_file_path):
     return adm_function_content
 
 def create_migrations_superuser(distro, operating_system, env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", default="myProject")
+    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
         
     # Get the path to the script's directory
     script_directory = os.path.dirname(os.path.abspath(__file__))
