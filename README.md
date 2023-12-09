@@ -1,16 +1,10 @@
 ### Install Build
 
-To install the build, follow these steps:
+To install the script, you can use the following one-liner on your Unix-like system:
 
-1. Make the install script executable:
-    ```bash
-    chmod +x install.sh
-    ```
-
-2. Run the install script:
-    ```bash
-    ./install.sh
-    ```
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/adityathute/build/Master/install.sh)"
+```
 
 This script is designed for Unix-like systems, and it assumes that you have the necessary permissions to execute the script. Please ensure that your system meets the requirements before running the installation.
 
