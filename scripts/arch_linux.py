@@ -231,10 +231,7 @@ def copy_env_file(src_path, dest_path):
         dest_file.write(content)
 
 def create_configuration(env_path):
-    current_directory = os.getcwd()
-
     new_env_path = ".env"
-    new_env_path = os.path.join(current_directory, new_env_path)
 
     if os.path.exists(env_path):
         if os.path.exists(new_env_path):
