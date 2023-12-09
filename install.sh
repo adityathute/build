@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Declare global variables
+ENV_FILE="build_project/scripts/.env"
+ERROR_CODE=false
+BUILD="build_project"
+CONFIG=false
+
 # Check if the terminal supports colors
 if [ -t 1 ] && command -v tput > /dev/null; then
     color_dark_red=$(tput setaf 1)
@@ -70,7 +76,7 @@ clone_build() {
 
         # Check if core.py exists, and if yes, execute it with OS and DISTRIBUTION parameters
         if [ -f "core.py" ]; then
-            python core.py "$OS" "$DISTRO"
+            python core.py "$OS" "$DISTRO" "$ENV_FILE"
         fi
     fi
 }
@@ -254,11 +260,6 @@ check_input_file() {
     fi
 }
 
-# Declare global variables
-ENV_FILE="build_project/scripts/.env"
-# Initialize ERROR_CODE as false
-ERROR_CODE=false
-
 hide_password() {
     password="$DATABASE_PASSWORD"
 
@@ -328,10 +329,6 @@ source_env_file() {
     return 1  # Return false (1) to indicate failure
   fi
 }
-
-# Declare global variables
-BUILD="build_project"
-CONFIG=false
 
 verification() {
     # Prompt the user to press any key before continuing

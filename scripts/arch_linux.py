@@ -231,7 +231,7 @@ def copy_env_file(src_path, dest_path):
         dest_file.write(content)
 
 def create_configuration(env_path):
-    print(env_path)
+
     new_env_path = ".env"
 
     if os.path.exists(env_path):
