@@ -443,10 +443,10 @@ def animate_dots(duration):
 
 # Function to provide a summary
 def summary():
-    print("\nSummary:-")
-    for category, messages in msg_dict.items():
-        if messages:  # Check if the set is not empty
-            print(f"{category} -- {next(iter(messages))}")  # Print the first element in the set
+    # print("\nSummary:-")
+    # for category, messages in msg_dict.items():
+    #    if messages:  # Check if the set is not empty
+    #         print(f"{category} -- {next(iter(messages))}")  # Print the first element in the set
     
     # Displaying a cleaning animation with dots and a final message
     print("\ncleaning", end='', flush=True); animate_dots(3); print("\n\033[F\033[KAll Done\n", end='', flush=True)
