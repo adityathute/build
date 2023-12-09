@@ -6,7 +6,6 @@ import shutil
 import filecmp
 import secrets
 import string
-import time
 
 # Implement alias setting based on distro and OS.
 def set_alias(distro, operating_system):
@@ -217,61 +216,6 @@ def clone_project(env_path):
             else:
                 print(f"warning: {prj_name} is already cloned -- skipping")
 
-def virtual_environment():
-    if not os.path.exists("env"):
-        # Create a virtual environment
-        print(f"creating virtual environment...")
-        run_command("python -m venv env")
-    
-    # Activate the virtual environment manually by setting up environment variables
-    activate_script = os.path.join("env", "bin", "activate")
-    activate_cmd = f"source {activate_script} && env"
-    env_output = run_command(activate_cmd, capture_output=True)
-
-    # Extract environment variables from the activation script output
-    env_vars = {line.split("=", 1)[0]: line.split("=", 1)[1] for line in env_output.splitlines()}
-
-    # Set up the environment variables in the current process
-    os.environ.update(env_vars)
-
-def remove_package_lock():
-    pkg_lock_json="./package-lock.json"
-
-    # Check if the package-lock.json file exists
-    if os.path.exists(pkg_lock_json):
-        # If it exists, delete the file
-        os.remove(pkg_lock_json)
-
-def config_npm(prj_name):
-    pkg_json="./package.json"
-    pkg_json_location = f"{prj_name}/build/package.json"
-
-    if not os.path.exists(pkg_json):
-        # If not, copy it from the source location
-        remove_package_lock()
-        shutil.copy(pkg_json_location, pkg_json)
-    else:
-        # Read the content of both files
-        with open(pkg_json, 'r') as dest_file, open(pkg_json_location, 'r') as src_file:
-            dest_content = dest_file.read()
-            src_content = src_file.read()
-
-        # Compare content
-        if dest_content != src_content:
-            remove_package_lock()
-            # If content is different, update the package.json file
-            shutil.copy(pkg_json_location, pkg_json)
-
-def install_dependencies(env_path):
-    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
-
-    # Install dependencies from requirements.txt
-    run_command(f"pip install -r {prj_name}/build/requirements.txt")
-
-    # Install npm
-    config_npm(prj_name)
-    run_command("npm install")
-
 def generate_secret_key(length=64):
     # Define the characters to be used in the secret key
     characters = string.ascii_letters + string.digits + string.punctuation
@@ -345,7 +289,95 @@ def create_configuration(env_path):
         if os.path.exists(config_path):
             print(f"Error: File not found - {config_path}")
 
-def clean_project():
-    print("Cleaning project...")
-    time.sleep(3)  # Pause execution for 3 seconds
-    print("Project cleaned.")
+def virtual_environment():
+    if not os.path.exists("env"):
+        # Create a virtual environment
+        print(f"creating virtual environment...")
+        run_command("python -m venv env")
+    
+    # Activate the virtual environment manually by setting up environment variables
+    activate_script = os.path.join("env", "bin", "activate")
+    activate_cmd = f"source {activate_script} && env"
+    env_output = run_command(activate_cmd, capture_output=True)
+
+    # Extract environment variables from the activation script output
+    env_vars = {line.split("=", 1)[0]: line.split("=", 1)[1] for line in env_output.splitlines()}
+
+    # Set up the environment variables in the current process
+    os.environ.update(env_vars)
+
+def remove_package_lock():
+    pkg_lock_json="./package-lock.json"
+
+    # Check if the package-lock.json file exists
+    if os.path.exists(pkg_lock_json):
+        # If it exists, delete the file
+        os.remove(pkg_lock_json)
+
+def config_npm(prj_name):
+    pkg_json="./package.json"
+    pkg_json_location = f"{prj_name}/build/package.json"
+
+    if not os.path.exists(pkg_json):
+        # If not, copy it from the source location
+        remove_package_lock()
+        shutil.copy(pkg_json_location, pkg_json)
+    else:
+        # Read the content of both files
+        with open(pkg_json, 'r') as dest_file, open(pkg_json_location, 'r') as src_file:
+            dest_content = dest_file.read()
+            src_content = src_file.read()
+
+        # Compare content
+        if dest_content != src_content:
+            remove_package_lock()
+            # If content is different, update the package.json file
+            shutil.copy(pkg_json_location, pkg_json)
+
+def install_dependencies(env_path):
+    prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
+
+    # Install dependencies from requirements.txt
+    run_command(f"pip install -r {prj_name}/build/requirements.txt")
+
+    # Install npm
+    config_npm(prj_name)
+    run_command("npm install")
+
+def extract_adm_function(alias_file_path):
+    adm_function_found = False
+    adm_function_content = []
+
+    with open(alias_file_path, "r") as alias_file:
+        for line in alias_file:
+            if "function adm {" in line:
+                adm_function_found = True
+            elif adm_function_found and line.strip() == "}":
+                break
+            elif adm_function_found:
+                adm_function_content.append(line.strip())
+
+    return adm_function_content
+
+def create_migrations_superuser(distro, operating_system, env_path):
+    # prj_name = get_env_data(env_path, "PROJECT_NAME", "myProject")
+        
+    # # Get the path to the script's directory
+    # script_directory = os.path.dirname(os.path.abspath(__file__))
+
+    # # Specify the path to the alias.txt and .bashrc files relative to the script's directory
+    # alias_file_path = os.path.join(script_directory, f"os/{operating_system}/{distro}/alias.txt")
+
+    # # Extract 'adm' function content
+    # adm_function_content = extract_adm_function(alias_file_path)
+
+    # # Get the path to the project directory
+    # project_directory = os.path.join(os.getcwd(), prj_name)
+
+    # # Change the current working directory to the project directory
+    # os.chdir(project_directory)
+
+    # # Run each line from 'adm' function content as a command
+    # for command in adm_function_content:
+    #     run_command(command)
+    pass
