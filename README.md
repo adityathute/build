@@ -3,10 +3,6 @@
 To install the script, you can use the following one-liner on your Unix-like system:
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/adityathute/build/Master/install.sh)"
-```
-
-```bash
 curl -SL https://github.com/adityathute/build/archive/refs/tags/v1.0.0.tar.gz | tar -xz && bash build-1.0.0/install.sh
 ```
 
