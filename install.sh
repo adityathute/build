@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Declare global variables
-ENV_FILE="build_project/scripts/.env"
+ENV_FILE="build-1.0.0/scripts/.env"
 ERROR_CODE=false
-BUILD="build_project"
+BUILD="build-1.0.0"
 CONFIG=false
 checkmark_symbol="✓"
 
@@ -69,7 +69,7 @@ clone_build() {
         fi
     else
         # Clone the repository into the build directory
-        git clone -b Master https://github.com/adityathute/build.git "$BUILD"
+        curl -SL https://github.com/adityathute/build/archive/refs/tags/v1.0.0.tar.gz | tar -xz
         update_config
         cd "$BUILD" || exit 1
 
